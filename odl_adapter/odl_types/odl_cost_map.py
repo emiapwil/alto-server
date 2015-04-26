@@ -37,11 +37,17 @@ class ODLCostMap:
     def odl_cost_map(self):
         return self.content
 
+    def odl_cost_map_json(self):
+        return json.dumps(self.odl_cost_map())
+
     def rfc_cost_map(self):
         return {
             'meta': self.to_rfc_meta(self.content['alto:meta']),
             'cost-map': self.to_rfc_maps(self.content['alto:map'])
         }
+
+    def rfc_cost_map_json(self):
+        return json.dumps(self.rfc_cost_map())
 
     def to_odl_dependent_vtags(self, rfc_d_vtags):
         odl_d_vtags = []
