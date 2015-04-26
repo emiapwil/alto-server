@@ -21,6 +21,9 @@ class ODLNetworkMap:
     def odl_network_map_json(self):
         return json.dumps(self.odl_network_map())
 
+    def resource_id(self):
+        return self.content['alto-service:resource-id']
+
     def rfc_network_map(self):
         return {
             'meta': {
