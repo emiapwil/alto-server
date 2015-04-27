@@ -9,14 +9,14 @@ class ODLCostMap:
 
     def load_from_rfc(self, rfc_cost_map):
         self.content = {
-            'alto-service:resource-id': self.resource_id(rfc_cost_map['meta']),
+            'alto-service:resource-id': self.generate_resource_id(rfc_cost_map['meta']),
             'alto-service:tag': self.tag(),
             'alto-service:meta': self.to_odl_meta(rfc_cost_map['meta']),
             'alto-service:map': self.to_odl_maps(rfc_cost_map['cost-map'])
         }
         return self
 
-    def resource_id(self, rfc_meta):
+    def generate_resource_id(self, rfc_meta):
         resource_id = rfc_meta['dependent-vtags'][0]['resource-id']
         cost_mode = rfc_meta['cost-type']['cost-mode']
         cost_metric = rfc_meta['cost-type']['cost-metric']
