@@ -38,17 +38,37 @@ def get_backend(name):
         return server.backends[name]
     return None
 
-@bottle.get('/<name:re:.+>')
-def dispatch(name):
+def dispatch(name, task_template):
     backend = get_backend(name)
     if backend is not None:
         try:
-            reply = backend.get(bottle.request, bottle.response)
+            reply = task_template(backend, bottle.request, bottle.response)
             return reply
         except Exception as e:
+            bottle.response.status = 500
+            print(e)
             return e
     bottle.response.status = 404
     return "No such service"
+
+@bottle.get('/<name:re:.+>')
+def palto_get(name):
+    get = lambda backend, request, response: backend.get(request, response)
+    dispatch(name, get)
+
+@bottle.post('/<name:re:.+>')
+def palto_post(name):
+    post = lambda backend, request, response: backend.post(request, response)
+    dispatch(name, post)
+
+@bottle.put('/<name:re:.+>')
+def palto_put(name):
+    put = lambda backend, request, response: backend.put(request, response)
+
+@bottle.delete('/<name:re:.+>')
+def palto_delete(name):
+    delete = lambda backend, request, response: backend.delete(request, response)
+    dispatch(name, delete)
 
 parser = argparse.ArgumentParser(description='Python ALTO server')
 parser.add_argument('-c', '--config', default='palto.conf',
