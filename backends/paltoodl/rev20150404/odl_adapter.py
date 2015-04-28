@@ -42,14 +42,9 @@ class ODLAdapter:
         url = self.cost_map_url(resource_id)
         r = requests.get(url, auth=self.auth, headers=self.HEADERS)
         if self.check_response(r, 'HttpGet'):
-<<<<<<< HEAD:odl_adapter/odl_adapter.py
             odl_cost_map = self.unwrap_cost_map(r.text)
             cost_map = ODLCostMap().load_from_odl(odl_cost_map)
             return self.to_json(cost_map.rfc_cost_map())
-=======
-            cost_map = ODLCostMap().load_from_str(r.text)
-            return cost_map.rfc_cost_map_json()
->>>>>>> 4cec48fd0700d78014f16660c9713a8a4d8ea301:backends/paltoodl/rev20150404/odl_adapter.py
 
     def put_cost_map(self, rfc_cost_map):
         cost_map = ODLCostMap().load_from_rfc(rfc_cost_map)
