@@ -1,54 +1,45 @@
 #!/usr/bin/env python3
-import json
-import time
-
 class ODLNetworkMap:
-    def load_from_str(self, json_str):
-        self.content = json.load(json_str)
+    def load_from_odl(self, network_map):
+        self.content = network_map
         return self
 
     def load_from_rfc(self, rfc_network_map):
         self.content = {
-            'alto-service:resource-id': rfc_network_map['meta']['vtag']['resource-id'],
-            'alto-service:tag': rfc_network_map['meta']['vtag']['tag'],
-            'alto-service:map': self.to_odl_maps(rfc_network_map['network-map'])
+            'resource-id': rfc_network_map['meta']['vtag']['resource-id'],
+            'tag': rfc_network_map['meta']['vtag']['tag'],
+            'map': self.to_odl_maps(rfc_network_map['network-map'])
         }
         return self
 
     def odl_network_map(self):
         return self.content
 
-    def odl_network_map_json(self):
-        return json.dumps(self.odl_network_map())
-
     def resource_id(self):
-        return self.content['alto-service:resource-id']
+        return self.content['resource-id']
 
     def rfc_network_map(self):
         return {
             'meta': {
                 'vtag': {
-                    'resource-id': self.content['alto-service:resource-id'],
-                    'tag': self.content['alto-service:tag']
+                    'resource-id': self.content['resource-id'],
+                    'tag': self.content['tag']
                 }
             },
-            'network-map': self.to_rfc_maps(self.content['alto-service:map'])
+            'network-map': self.to_rfc_maps(self.content['map'])
         }
-
-    def rfc_network_map_json(self):
-        return json.dumps(self.rfc_network_map())
 
     def to_odl_maps(self, rfc_maps):
         odl_maps = []
         for pid in rfc_maps:
             odl_map = {
-                'alto-service:pid': pid,
-                'alto-service:endpoint-address-group': []
+                'pid': pid,
+                'endpoint-address-group': []
             }
             for addr_type in rfc_maps[pid]:
-                odl_map['alto-service:endpoint-address-group'].append({
-                    'alto-service:address-type': addr_type,
-                    'alto-service:endpoint-prefix': rfc_maps[pid][addr_type]
+                odl_map['endpoint-address-group'].append({
+                    'address-type': addr_type,
+                    'endpoint-prefix': rfc_maps[pid][addr_type]
                 })
             odl_maps.append(odl_map)
         return odl_maps
@@ -56,10 +47,10 @@ class ODLNetworkMap:
     def to_rfc_maps(self, odl_maps):
         rfc_maps = {}
         for odl_map in odl_maps:
-            pid = odl_map['alto-service:pid']
+            pid = odl_map['pid']
             rfc_maps[pid] = {}
-            for group in odl_map['alto-service:endpoint-address-group']:
-                add_type = group['alto-service:address-type']
-                prefixes = group['alto-service:endpoint-prefix']
+            for group in odl_map['endpoint-address-group']:
+                add_type = group['address-type']
+                prefixes = group['endpoint-prefix']
                 rfc_maps[pid][add_type] = prefixes
         return rfc_maps
