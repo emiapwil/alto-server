@@ -13,7 +13,7 @@ def not_acceptable(response):
     return ''
 
 
-def not_allow(response, allow):
+def not_allowed(response, allow):
     response.status = 405 # Method not allowed
     response.set_header('Allow', ','.join(allow))
     return ''
@@ -51,15 +51,15 @@ class BasicIRDBackend(Backend):
 
 
     def post(self, request, response, actual_post = None):
-        return not_allow(response, ['GET'])
+        return not_allowed(response, ['GET'])
 
 
     def put(self, request, response, actual_put = None):
-        return not_allow(response, ['GET'])
+        return not_allowed(response, ['GET'])
 
 
     def delete(self, request, response, actual_delete = None):
-        return not_allow(response, ['GET'])
+        return not_allowed(response, ['GET'])
 
 
 class FilterableMapBackend(Backend):
@@ -79,7 +79,7 @@ class FilterableMapBackend(Backend):
 
     def post(self, request, response, actual_post = None):
         if not self.filtered:
-            return not_allow(response, ['GET'])
+            return not_allowed(response, ['GET'])
 
         if not mime_matches(self.consumes, request.get_header('content-type')):
             return not_supported(response)
@@ -88,10 +88,10 @@ class FilterableMapBackend(Backend):
         return process(request, response, actual_post)
 
     def put(self, request, response, actual_put = None):
-        return not_allow(response, ['GET'] + (['POST'] if self.filtered else []))
+        return not_allowed(response, ['GET'] + (['POST'] if self.filtered else []))
 
     def delete(self, request, response, actual_delete = None):
-        return not_allow(response, ['GET'] + (['POST'] if self.filtered else []))
+        return not_allowed(response, ['GET'] + (['POST'] if self.filtered else []))
 
 
 class BasicNetworkMapBackend(FilterableMapBackend):
