@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from . import palto_config
-import configparser
 import glob
 import sys
 import logging
@@ -31,11 +30,11 @@ def get_providers(config):
     providers = load_providers(provider_list)
     return providers
 
-def get_instances(config, providers):
-    if palto_config.has_missing_options(config, 'backend', ['resources']):
+def get_instances(global_config, providers):
+    if palto_config.has_missing_options(global_config, 'backend', ['resources']):
         return None
 
-    resources = config['backend']['resources']
+    resources = global_config['backend']['resources']
     resources = [x.strip() for x in resources.split(',')]
     logging.debug(resources)
 
@@ -63,19 +62,43 @@ def get_instances(config, providers):
             provider = providers[clazz]
 
             _create_instance = getattr(provider, 'create_instance')
-            instances[rid] = _create_instance(config)
+            instances[rid] = _create_instance(config, global_config)
         except Exception as e:
             logging.warn('Failed to parse backend instance: %s : %s', f, e)
 
     return instances
 
+def is_ird_resource(instance):
+    if instance is None:
+        return False
+    if not instance.config.has_section('ird'):
+        return False
+    if not hasattr(instance, 'register'):
+        return False
+    return True
+
+def generate_ird(instances):
+    root_ird = SimpleIRDBackend(palto_config.genereate_ird_config(''))
+    irds = {}
+    for instance in instances:
+        if not is_ird_resource(instance):
+            continue
+        config = instance.config
+        mountpoints = config.get('ird', 'mountpoints', fallback='')
+        mountpoints = { x.strip() for x in mountpoints.split(',') }
+
+        for mountpoint in mountpoints:
+            if not mountpoint in irds:
+                ird_config = palto_config.genereate_ird_config(mountpoint)
+                irds[mountpoint] = SimpleIRDBackend(ird_config)
+                ird.register(root_ird)
+            
+            ird = irds[mountpoint]
+            instance.register(ird)
+
 class Backend():
-
-    def __init__(self):
-        pass
-
-    def get_ird_meta(self):
-        return None
+    def __init__(self, config):
+        self.config = config
 
     def get(self, request, response):
         raise NotImplementedError()

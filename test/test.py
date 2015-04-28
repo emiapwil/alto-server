@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from palto.rfc7285.basic import BasicNetworkMapBackend
+from palto.rfc7285.basic import AbstractNetworkMapBackend
 import json
 import mimeparse
 
-class TestBackend(BasicNetworkMapBackend):
+class TestBackend(AbstractNetworkMapBackend):
 
-    def __init__(self):
-        BasicNetworkMapBackend.__init__(self, filtered = True)
+    def __init__(self, config):
+        AbstractNetworkMapBackend.__init__(self, config, filtered = True)
 
     def accept(self, expected, accept):
         return mimeparse.best_match(expected, accept)
@@ -17,14 +17,14 @@ class TestBackend(BasicNetworkMapBackend):
 
     def get(self, request, response):
         actual_get = lambda request, response: self._get(request, response)
-        BasicNetworkMapBackend.get(self, request, response, actual_get)
+        return AbstractNetworkMapBackend.get(self, request, response, actual_get)
 
     def _post(self, request, response):
         return self._get(request, response)
 
     def post(self, request, response):
         actual_post = lambda req, rep: self._post(req, rep)
-        BasicNetworkMapBackend.post(self, request, response, actual_post)
+        return AbstractNetworkMapBackend.post(self, request, response, actual_post)
 
-def create_instance(config):
-    return TestBackend()
+def create_instance(config, global_config):
+    return TestBackend(config)

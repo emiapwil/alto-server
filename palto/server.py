@@ -54,32 +54,25 @@ def dispatch(name, task_template):
     bottle.response.status = 404
     return "No such service"
 
-@bottle.get('/')
-def root_ird():
-    ird = { 'meta' : {}, 'resources' : {} }
-    for rid, resource in server.backends.items():
-        ird['resources'][rid] = resource.get_ird_meta()
-    bottle.response.set_header('content-type', mimetypes.IRD)
-    return json.dumps(ird)
-
-@bottle.get('/<name:re:.+>')
+@bottle.get('/<name:re:.*>')
 def palto_get(name):
     get = lambda backend, request, response: backend.get(request, response)
-    dispatch(name, get)
+    return dispatch(name, get)
 
-@bottle.post('/<name:re:.+>')
+@bottle.post('/<name:re:.*>')
 def palto_post(name):
     post = lambda backend, request, response: backend.post(request, response)
-    dispatch(name, post)
+    return dispatch(name, post)
 
-@bottle.put('/<name:re:.+>')
+@bottle.put('/<name:re:.*>')
 def palto_put(name):
     put = lambda backend, request, response: backend.put(request, response)
+    return dispatch(name, put)
 
-@bottle.delete('/<name:re:.+>')
+@bottle.delete('/<name:re:.*>')
 def palto_delete(name):
     delete = lambda backend, request, response: backend.delete(request, response)
-    dispatch(name, delete)
+    return dispatch(name, delete)
 
 parser = argparse.ArgumentParser(description='Python ALTO server')
 parser.add_argument('-c', '--config', default='palto.conf',

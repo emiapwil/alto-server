@@ -26,6 +26,12 @@ def parse(file_path):
     config.read_file(open(file_path))
     return config
 
+def genereate_ird_config(mountpoint):
+    config = configparser.ConfigParser()
+    config['basic'] = { 'resource-id' : mountpoint , 'type' : 'directory' }
+    config['ird'] = { 'mountpoints' : '' }
+    return config
+
 def get_server_info(config):
     try:
         frontend = config['frontend']
