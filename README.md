@@ -1,10 +1,17 @@
 # About ALTO-server project
 
+## Prerequisites
+
+In current approach we require the following python libraries:
+
+- [`bottle.py`][bottle.py],
+- [`mimeparse`][mimeparse]
+
 ## Architecture
 
 ### Front-end
 
-We will be using [bottle](http://bottlepy.org/) to provide RESTful service.
+We will be using [bottle][bottle.py] to provide RESTful service.
 
 ### Back-end
 
@@ -18,3 +25,6 @@ There are currently two back-end types to be supported:
 ~~~
 python -m palto.server -c examples/palto.conf
 ~~~
+
+[bottle.py]: http://bottlepy.org/
+[mimeparse]: https://github.com/dbtsai/python-mimeparse

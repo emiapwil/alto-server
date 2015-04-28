@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from .. import Backend
 from . import mimetypes
 
@@ -13,7 +15,7 @@ def not_acceptable(response):
     return ''
 
 
-def not_allow(response, allow):
+def not_allowed(response, allow):
     response.status = 405 # Method not allowed
     response.set_header('Allow', ','.join(allow))
     return ''
@@ -33,16 +35,16 @@ def process(request, response, do_process):
     return do_process(request, response)
 
 
-class BasicIRDBackend(Backend):
+class AbstractIRDBackend(Backend):
 
     PROVIDES = [ mimetypes.IRD, mimetypes.ERROR ]
 
-    def __init__(self):
-        Backend.__init__(self)
+    def __init__(self, config):
+        Backend.__init__(self, config)
 
 
     def get(self, request, response, actual_get = None):
-        provides = BasicIRDBackend.PROVIDES
+        provides = AbstractIRDBackend.PROVIDES
         if not mime_matches(provides, request.get_header('accept')):
             return not_acceptable(response)
 
@@ -51,21 +53,20 @@ class BasicIRDBackend(Backend):
 
 
     def post(self, request, response, actual_post = None):
-        return not_allow(response, ['GET'])
+        return not_allowed(response, ['GET'])
 
 
     def put(self, request, response, actual_put = None):
-        return not_allow(response, ['GET'])
+        return not_allowed(response, ['GET'])
 
 
     def delete(self, request, response, actual_delete = None):
-        return not_allow(response, ['GET'])
-
+        return not_allowed(response, ['GET'])
 
 class FilterableMapBackend(Backend):
 
-    def __init__(self, provides, consumes, filtered = False):
-        Backend.__init__(self)
+    def __init__(self, config, provides, consumes, filtered = False):
+        Backend.__init__(self, config)
         self.provides = provides
         self.consumes = consumes
         self.filtered = filtered
@@ -79,7 +80,7 @@ class FilterableMapBackend(Backend):
 
     def post(self, request, response, actual_post = None):
         if not self.filtered:
-            return not_allow(response, ['GET'])
+            return not_allowed(response, ['GET'])
 
         if not mime_matches(self.consumes, request.get_header('content-type')):
             return not_supported(response)
@@ -88,30 +89,30 @@ class FilterableMapBackend(Backend):
         return process(request, response, actual_post)
 
     def put(self, request, response, actual_put = None):
-        return not_allow(response, ['GET'] + (['POST'] if self.filtered else []))
+        return not_allowed(response, ['GET'] + (['POST'] if self.filtered else []))
 
     def delete(self, request, response, actual_delete = None):
-        return not_allow(response, ['GET'] + (['POST'] if self.filtered else []))
+        return not_allowed(response, ['GET'] + (['POST'] if self.filtered else []))
 
 
-class BasicNetworkMapBackend(FilterableMapBackend):
+class AbstractNetworkMapBackend(FilterableMapBackend):
 
     CONSUMES = [ mimetypes.NETWORK_MAP_FILTER ]
     PROVIDES = [ mimetypes.NETWORK_MAP, mimetypes.ERROR ]
 
-    def __init__(self, filtered = False):
-        provides = BasicNetworkMapBackend.PROVIDES
-        consumes = BasicNetworkMapBackend.CONSUMES
-        FilterableMapBackend.__init__(self, provides, consumes, filtered)
+    def __init__(self, config, filtered = False):
+        provides = AbstractNetworkMapBackend.PROVIDES
+        consumes = AbstractNetworkMapBackend.CONSUMES
+        FilterableMapBackend.__init__(self, config, provides, consumes, filtered)
 
 
-class BasicCostMapBackend(FilterableMapBackend):
+class AbstractCostMapBackend(FilterableMapBackend):
 
     PROVIDES = [ mimetypes.COST_MAP, mimetypes.ERROR ]
     CONSUMES = [ mimetypes.COST_MAP_FILTER ]
 
     def __init__(self, filtered = False):
-        provides = BasicCostMapBackend.PROVIDES
-        consumes = BasicCostMapBackend.CONSUMES
-        FilterableMapBackend.__init__(self, provides, consumes, filtered)
+        provides = AbstractCostMapBackend.PROVIDES
+        consumes = AbstractCostMapBackend.CONSUMES
+        FilterableMapBackend.__init__(self, config, provides, consumes, filtered)
 

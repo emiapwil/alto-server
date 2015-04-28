@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from . import palto_config
 
 def get_server_info(config):
