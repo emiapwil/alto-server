@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from palto.rfc7285.basic import BasicNetworkMapBackend
 import json
 import mimeparse

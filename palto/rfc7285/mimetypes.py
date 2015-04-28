@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 def get_alto_type(name):
     return 'application/alto-{}+json'.format(name)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from odl_types.odl_network_map import ODLNetworkMap
-from odl_types.odl_cost_map import ODLCostMap
+from .odl_types.odl_network_map import ODLNetworkMap
+from .odl_types.odl_cost_map import ODLCostMap
 from requests.auth import HTTPBasicAuth
 import requests
 import logging
@@ -33,7 +33,7 @@ class ODLAdapter:
         r = requests.get(url, auth=self.auth, headers=self.HEADERS)
         if self.check_response(r, 'HttpGet'):
             cost_map = ODLCostMap().load_from_str(r.text)
-            return network_map.rfc_network_map_json()
+            return cost_map.rfc_cost_map_json()
 
     def put_cost_map(self, rfc_cost_map):
         cost_map = ODLCostMap().load_from_rfc(rfc_cost_map)

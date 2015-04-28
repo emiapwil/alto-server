@@ -1,9 +1,7 @@
-import configparser
+#!/usr/bin/env python3
 
-def print_message(message, ignore = False):
-    if ignore:
-        return
-    print(message)
+import configparser
+import logging
 
 def has_missing_options(config, section, options, ignore = False):
     NO_SECTION_FOUND = 'No *{}* section is found in the configuration'
@@ -12,18 +10,18 @@ def has_missing_options(config, section, options, ignore = False):
     missing = False
 
     if not config.has_section(section):
-        print_message(NO_SECTION_FOUND.format(section), ignore)
+        logging.warn(NO_SECTION_FOUND.format(section))
         missing = True
 
     for option in options:
         if not config.has_option(section, option):
-            print_message(NO_OPTION_FOUND.format(option, section), ignore)
+            logging.warn(NO_OPTION_FOUND.format(option, section))
             missing = True
 
     return missing
 
 def parse(file_path):
-    print('config: {}'.format(file_path))
+    logging.debug('config: {}'.format(file_path))
     config = configparser.ConfigParser()
     config.read_file(open(file_path))
     return config

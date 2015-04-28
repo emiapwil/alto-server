@@ -1,8 +1,11 @@
+#!/usr/bin/env python3
+
 import argparse
 import bottle
 import json
 import sys
 from . import palto_config, frontend, backend
+from .rfc7285 import mimetypes
 
 @bottle.route('/test')
 def test():
@@ -46,10 +49,18 @@ def dispatch(name, task_template):
             return reply
         except Exception as e:
             bottle.response.status = 500
-            print(e)
+            logging.warn(e)
             return e
     bottle.response.status = 404
     return "No such service"
+
+@bottle.get('/')
+def root_ird():
+    ird = { 'meta' : {}, 'resources' : {} }
+    for rid, resource in server.backends.items():
+        ird['resources'][rid] = resource.get_ird_meta()
+    bottle.response.set_header('content-type', mimetypes.IRD)
+    return json.dumps(ird)
 
 @bottle.get('/<name:re:.+>')
 def palto_get(name):
