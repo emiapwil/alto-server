@@ -9,6 +9,8 @@ import json
 
 class ODLAdapter:
     HEADERS = {'Content-Type': 'application/yang.data+json'}
+    NETWORK_MAP = 'network-map'
+    COST_MAP = 'cost-map'
 
     def __init__(self, args):
         self.host = args['host']
@@ -16,56 +18,48 @@ class ODLAdapter:
         self.auth = HTTPBasicAuth(args['user'], args['password'])
 
     def get_network_map(self, resource_id):
-        url = self.network_map_url(resource_id)
-        r = requests.get(url, auth=self.auth, headers=self.HEADERS)
-        if self.check_response(r, 'HttpGet'):
-            odl_network_map = self.unwrap_network_map(r.text)
-            network_map = ODLNetworkMap().load_from_odl(odl_network_map)
-            return self.to_json(network_map.rfc_network_map())
-
-    def put_network_map(self, rfc_network_map):
-        network_map = ODLNetworkMap().load_from_rfc(rfc_network_map)
-        map_data = self.wrap_network_map(network_map.odl_network_map())
-        url = self.network_map_url(network_map.resource_id())
-        r = requests.put(url, auth=self.auth, data=map_data, headers=self.HEADERS)
-        self.check_response(r, 'HttpPut')
-
-    def wrap_network_map(self, network_map):
-        wrap_data = {'network-map': [network_map]}
-        return self.to_json(wrap_data)
-
-    def unwrap_network_map(self, wrapped_network_map):
-        network_maps = json.loads(wrapped_network_map)
-        return network_maps['network-map'][0]
+        return self.get_map(self.NETWORK_MAP, resource_id)
 
     def get_cost_map(self, resource_id):
-        url = self.cost_map_url(resource_id)
+        return self.get_map(self.COST_MAP, resource_id)
+
+    def get_map(self, map_type, resource_id):
+        url = self.map_url(map_type, resource_id)
         r = requests.get(url, auth=self.auth, headers=self.HEADERS)
         if self.check_response(r, 'HttpGet'):
-            odl_cost_map = self.unwrap_cost_map(r.text)
-            cost_map = ODLCostMap().load_from_odl(odl_cost_map)
-            return self.to_json(cost_map.rfc_cost_map())
+            map_data = self.unwrap_map(map_type, r.text)
+            odl_map = self.get_map_instance(map_type).load_odl_map(map_data)
+            return self.to_json(odl_map.rfc_map())
+
+    def put_network_map(self, rfc_network_map):
+        self.put_map(self.NETWORK_MAP, rfc_network_map)
 
     def put_cost_map(self, rfc_cost_map):
-        cost_map = ODLCostMap().load_from_rfc(rfc_cost_map)
-        map_data = self.wrap_cost_map(cost_map.odl_cost_map())
-        url = self.cost_map_url(cost_map.resource_id())
+        self.put_map(self.COST_MAP, rfc_cost_map)
+
+    def put_map(self, map_type, rfc_map):
+        odl_map = self.get_map_instance(map_type).load_rfc_map(rfc_map)
+        map_data = self.wrap_map(map_type, odl_map.odl_map())
+        url = self.map_url(map_type, odl_map.resource_id())
         r = requests.put(url, auth=self.auth, data=map_data, headers=self.HEADERS)
         self.check_response(r, 'HttpPut')
 
-    def wrap_cost_map(self, cost_map):
-        wrap_data = {'cost-map': [cost_map]}
-        return self.to_json(wrap_data)
+    def get_map_instance(self, map_type):
+        if map_type == self.NETWORK_MAP:
+            return ODLNetworkMap()
+        if map_type == self.COST_MAP:
+            return ODLCostMap()
 
-    def unwrap_cost_map(self, wrapped_cost_map):
-        cost_maps = json.loads(wrapped_cost_map)
-        return cost_maps['cost-map'][0]
+    def wrap_map(self, map_type, map_data):
+        wrapped_map = {map_type: [map_data]}
+        return self.to_json(wrapped_map)
 
-    def network_map_url(self, resource_id):
-        return self.resource_url + 'alto-service:network-maps/alto-service:network-map/' + resource_id
+    def unwrap_map(self, map_type, wrapped_map_data):
+        maps = json.loads(wrapped_map_data)
+        return maps[map_type][0]
 
-    def cost_map_url(self, resource_id):
-        return self.resource_url + 'alto-service:cost-maps/alto-service:cost-map/' + resource_id
+    def map_url(self, map_type, resource_id):
+        return self.resource_url + 'alto-service:' + map_type + 's/alto-service:' + map_type + '/' + resource_id
 
     def check_response(self, resp, operation):
         if resp.status_code == requests.codes.ok:

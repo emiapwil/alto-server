@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-class ODLNetworkMap:
-    def load_from_odl(self, network_map):
-        self.content = network_map
+from .odl_abstract_map import AbstractODLMap
+
+class ODLNetworkMap( AbstractODLMap ):
+    def load_odl_map(self, odl_network_map):
+        self.content = odl_network_map
         return self
 
-    def load_from_rfc(self, rfc_network_map):
+    def load_rfc_map(self, rfc_network_map):
         self.content = {
             'resource-id': rfc_network_map['meta']['vtag']['resource-id'],
             'tag': rfc_network_map['meta']['vtag']['tag'],
@@ -12,13 +14,13 @@ class ODLNetworkMap:
         }
         return self
 
-    def odl_network_map(self):
+    def odl_map(self):
         return self.content
 
     def resource_id(self):
         return self.content['resource-id']
 
-    def rfc_network_map(self):
+    def rfc_map(self):
         return {
             'meta': {
                 'vtag': {

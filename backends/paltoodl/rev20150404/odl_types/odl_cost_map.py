@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
+from .odl_abstract_map import AbstractODLMap
 import time
 
-class ODLCostMap:
-    def load_from_odl(self, content):
-        self.content = content
+class ODLCostMap( AbstractODLMap ):
+    def load_odl_map(self, odl_cost_map):
+        self.content = odl_cost_map
         return self
 
-    def load_from_rfc(self, rfc_cost_map):
+    def load_rfc_map(self, rfc_cost_map):
         self.content = {
             'resource-id': self.generate_resource_id(rfc_cost_map['meta']),
             'tag': self.tag(),
@@ -14,6 +15,15 @@ class ODLCostMap:
             'map': self.to_odl_maps(rfc_cost_map['cost-map'])
         }
         return self
+
+    def odl_map(self):
+        return self.content
+
+    def rfc_map(self):
+        return {
+            'meta': self.to_rfc_meta(self.content['meta']),
+            'cost-map': self.to_rfc_maps(self.content['map'])
+        }
 
     def generate_resource_id(self, rfc_meta):
         resource_id = rfc_meta['dependent-vtags'][0]['resource-id']
@@ -34,15 +44,6 @@ class ODLCostMap:
         return {
             'dependent-vtags': self.to_odl_dependent_vtags(d_vtags),
             'cost-type': self.to_odl_cost_type(cost_type)
-        }
-
-    def odl_cost_map(self):
-        return self.content
-
-    def rfc_cost_map(self):
-        return {
-            'meta': self.to_rfc_meta(self.content['meta']),
-            'cost-map': self.to_rfc_maps(self.content['map'])
         }
 
     def to_odl_dependent_vtags(self, rfc_d_vtags):
