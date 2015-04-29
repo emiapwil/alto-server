@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
 from . import palto_config
+from .ird import BasicIRD
 import glob
 import sys
 import logging
+import importlib
 
 def load_providers(provider_list):
     providers = {}
     for provider in provider_list:
         try:
-            m = __import__(provider)
+            m = importlib.import_module(provider)
             if not hasattr(m, 'create_instance'):
                 logging.error('provider %s doesn\' have a *create_instance* method', provider)
                 continue
@@ -62,7 +64,7 @@ def get_instances(global_config, providers):
             provider = providers[clazz]
 
             _create_instance = getattr(provider, 'create_instance')
-            instances[rid] = _create_instance(config, global_config)
+            instances[rid] = _create_instance(rid, config, global_config)
         except Exception as e:
             logging.warn('Failed to parse backend instance: %s : %s', f, e)
 
@@ -80,8 +82,8 @@ def is_ird_resource(instance):
 def get_irdbackend(provider, mountpoint, global_config):
     _create_instance = getattr(provider, 'create_instance')
     config = palto_config.genereate_ird_config(mountpoint)
-    instance = _create_instance(config, global_config)
-    for attr in ['register', 'unregister', 'generate', 'update']:
+    instance = _create_instance(mountpoint, config, global_config)
+    for attr in BasicIRD.BASIC_ATTR:
         if hasattr(instance, attr):
             continue
         logging.error('Failed to create ird for mountpoint %s', mountpoint)
@@ -101,7 +103,7 @@ def generate_ird(global_config, providers, instances):
     if root is None:
         return
     irds = { '' : root }
-    for instance in instances:
+    for rid, instance in instances.items():
         if not is_ird_resource(instance):
             continue
         config = instance.config
@@ -115,11 +117,11 @@ def generate_ird(global_config, providers, instances):
             if not mountpoint in irds:
                 ird = get_irdbackend(provider, mountpoint, global_config)
                 if ird is not None:
-                    root.register(ird)
+                    root.register(mountpoint, ird)
                     irds[mountpoint] = ird
 
             ird = irds[mountpoint]
-            ird.register(instance)
+            ird.register(rid, instance)
 
     instances.update(irds)
 

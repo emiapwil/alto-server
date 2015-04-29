@@ -4,6 +4,7 @@ import argparse
 import bottle
 import json
 import sys
+import logging
 from . import palto_config, frontend, backend
 from .rfc7285 import mimetypes
 
@@ -64,7 +65,8 @@ def dispatch(name, task_template):
             return reply
         except Exception as e:
             bottle.response.status = 500
-            logging.warn(e)
+            raise e
+            logging.warning(e)
             return e
     bottle.response.status = 404
     return "No such service"

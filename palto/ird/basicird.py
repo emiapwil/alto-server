@@ -5,7 +5,7 @@ import logging
 class BasicIRD():
     """
     """
-
+    BASIC_ATTR = ['register', 'unregister', 'generate_dir', 'generate', 'update']
     ON_REGISTER = 'on_register'
     ON_UNREGISTER = 'on_unregister'
     ON_UPDATE = 'on_update'
@@ -50,16 +50,32 @@ class BasicIRD():
             task = lambda h: h.on_unregister(rid, resource, self.meta)
             self.execute_handler(name, task)
 
-    def generate(self, rid):
-        resource = self.resources.get(rid, None)
+    def update(self, rid, new_resource):
+        self.unregister(rid)
+        self.register(rid, new_resource)
+
+    def generate_dir(self):
+        dir = {}
+        dir['meta'] = self.meta
+        dir['resources'] = {}
+        for rid, resource in self.resources.items():
+            output = self.generate(rid, resource)
+            if output is not None:
+                dir['resources'][rid] = output
+
+        return dir
+
+    def generate(self, rid, resource = None):
         if resource is None:
-            return []
+            resource = self.resources.get(rid, None)
+        if resource is None:
+            return None
 
         output = resource.get_meta()
         for name in self.handle[BasicIRD.ON_GENERATE]:
             task = lambda h: h.on_generate(rid, resource, output, self.meta)
             self.execute_handler(name, task)
-        return [output]
+        return output
 
     def enable_handler(self, name, events, instance):
         if (name is None) or (events is None) or (instance is None):
