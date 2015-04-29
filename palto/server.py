@@ -13,8 +13,13 @@ def test():
     return json.dumps({ 'a' : 1, 'b' : 2})
 
 class PaltoServer():
+    """
+    """
 
-    def __init__(self, config_file):
+    instance = None
+
+    def __init__(self, **args):
+        config_file = args.pop('config', None)
         config = palto_config.parse(config_file)
 
         # check the setting for the frontend
@@ -24,19 +29,29 @@ class PaltoServer():
 
         # check the settings for the backend
         providers = backend.get_providers(config)
+        providers.update(args.pop('providers', {}))
         backends = backend.get_instances(config, providers)
+        backends.update(args.pop('backends', {}))
+
+        backend.generate_ird(config, providers, backends)
 
         self.config = config
         self.server_info = server_info
         self.providers = providers
         self.backends = backends
-        pass
 
     def run(self):
         server_info = self.server_info
         bottle.run(host=server_info['host'], port=server_info['port'], debug=True)
 
+    def get_instance():
+        return PaltoServer.instance
+
+    def set_instance(instance):
+        PaltoServer.instance = instance
+
 def get_backend(name):
+    server = PaltoServer.get_instance()
     if name in server.backends:
         return server.backends[name]
     return None
@@ -74,12 +89,14 @@ def palto_delete(name):
     delete = lambda backend, request, response: backend.delete(request, response)
     return dispatch(name, delete)
 
-parser = argparse.ArgumentParser(description='Python ALTO server')
-parser.add_argument('-c', '--config', default='palto.conf',
-                help='Configuration file for palto.py, default to "palto.conf"')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Python ALTO server')
+    parser.add_argument('-c', '--config', default='palto.conf',
+                    help='Configuration file for palto.py, default to "palto.conf"')
 
-args = parser.parse_args(sys.argv[1:])
+    args = parser.parse_args(sys.argv[1:])
 
-server = PaltoServer(args.config)
+    server = PaltoServer(config = args.config)
+    PaltoServer.set_instance(server)
 
-server.run()
+    server.run()

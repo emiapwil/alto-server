@@ -26,5 +26,13 @@ There are currently two back-end types to be supported:
 python -m palto.server -c examples/palto.conf
 ~~~
 
+## Debugging
+
+BasicIRD and some standard handlers are tested by:
+
+~~~
+python -m palto.rfc7285.irdhandler
+~~~
+
 [bottle.py]: http://bottlepy.org/
 [mimeparse]: https://github.com/dbtsai/python-mimeparse

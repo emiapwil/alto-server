@@ -73,13 +73,34 @@ def is_ird_resource(instance):
         return False
     if not instance.config.has_section('ird'):
         return False
-    if not hasattr(instance, 'register'):
+    if not hasattr(instance, 'get_meta'):
         return False
     return True
 
-def generate_ird(instances):
-    root_ird = SimpleIRDBackend(palto_config.genereate_ird_config(''))
-    irds = {}
+def get_irdbackend(provider, mountpoint, global_config):
+    _create_instance = getattr(provider, 'create_instance')
+    config = palto_config.genereate_ird_config(mountpoint)
+    instance = _create_instance(config, global_config)
+    for attr in ['register', 'unregister', 'generate', 'update']:
+        if hasattr(instance, attr):
+            continue
+        logging.error('Failed to create ird for mountpoint %s', mountpoint)
+        logging.error('IRD instance doesn\'t have %s method', attr)
+        return None
+    return instance
+
+def generate_ird(global_config, providers, instances):
+    name = global_config.get('ird', 'provider', fallback='palto.simpleird')
+    providers.update({} if name in providers else load_providers([name]))
+    provider = providers.get(name)
+    if provider is None:
+        logging.error('Failed to load ird provider class %s', name)
+        return
+
+    root = get_irdbackend(provider, '', global_config)
+    if root is None:
+        return
+    irds = { '' : root }
     for instance in instances:
         if not is_ird_resource(instance):
             continue
@@ -88,15 +109,24 @@ def generate_ird(instances):
         mountpoints = { x.strip() for x in mountpoints.split(',') }
 
         for mountpoint in mountpoints:
+            if mountpoint in instances:
+                logging.warn('Mountpoint %s is designated already', mountpoint)
+                continue
             if not mountpoint in irds:
-                ird_config = palto_config.genereate_ird_config(mountpoint)
-                irds[mountpoint] = SimpleIRDBackend(ird_config)
-                ird.register(root_ird)
-            
+                ird = get_irdbackend(provider, mountpoint, global_config)
+                if ird is not None:
+                    root.register(ird)
+                    irds[mountpoint] = ird
+
             ird = irds[mountpoint]
-            instance.register(ird)
+            ird.register(instance)
+
+    instances.update(irds)
 
 class Backend():
+    """
+    """
+
     def __init__(self, config):
         self.config = config
 

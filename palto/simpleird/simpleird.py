@@ -3,6 +3,9 @@
 from ..basic import AbstractIRDBackend
 
 class SimpleIRD():
+    """
+    """
+
     def __init__(self, config, args = {}):
         self.config = config
         self.resources = args['resources'] if 'resources' in args else {}
@@ -21,6 +24,9 @@ class SimpleIRD():
         return self.resources[rid] if rid in self.resources else None
 
 class SimpleIRDBackend(AbstractIRDBackend):
+    """
+    """
+
     def __init__(self, ird):
         AbstractIRDBackend.__init__(self, ird.config)
         self.ird = ird
