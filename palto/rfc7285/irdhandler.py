@@ -5,6 +5,8 @@ from .mimetypes import get_alto_mimetype
 import logging
 
 class ResourceID2URIHandler(BasicIRDHandler):
+    """
+    """
 
     def __init__(self, base_uri):
         self.base_uri = base_uri
@@ -17,13 +19,15 @@ class ResourceID2URIHandler(BasicIRDHandler):
         del out['resource-id']
 
 class Type2MediaTypeHandler(BasicIRDHandler):
+    """
+    """
 
     def on_generate(self, rid, resource, out, meta):
         if (out is None):
             return
         self.convert_mediatype(out)
         self.convert_accepts(out)
-        
+
     def convert_mediatype(self, out):
         if ('media-type' in out) or ('output' not in out):
             return
@@ -39,6 +43,8 @@ class Type2MediaTypeHandler(BasicIRDHandler):
         del out['input']
 
 class CostType2CostTypeNameHandler(BasicIRDHandler):
+    """
+    """
 
     def __init__(self):
         self.count = {}
@@ -74,7 +80,7 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
             name = CostType2CostTypeNameHandler.get_name_from_dict(rid, cost_type)
             if name is None:
                 continue
-            
+
             if not 'cost-types' in meta:
                 meta['cost-types'] = {}
 
@@ -108,7 +114,7 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
     def on_generate(self, rid, resource, output, meta):
         if not CostType2CostTypeNameHandler.matches(rid, resource):
             return
-        
+
         if not 'capabilities' in output:
             return
         if not 'cost-types' in output['capabilities']:
@@ -145,10 +151,9 @@ if __name__ == '__main__':
     import json
 
     ird = BasicIRD()
-    test_resource = BasicIRDResource('test', 'costmap', capabilities = { 'cost-types' : cost_types })
-    test_resource.get_meta = lambda : test_output
+    test_resource = BasicIRDResource('test', 'costmap', capabilities = { 'cost-types' : cost_types }, default = True, input = 'costmapfilter')
 
-    print(json.dumps(test_output))
+    print(json.dumps(test_resource.get_meta()))
 
     rid2uri = ResourceID2URIHandler('http://localhost:8080/')
     t2m = Type2MediaTypeHandler()
@@ -169,8 +174,8 @@ if __name__ == '__main__':
 
     ird.register('test', test_resource)
 
-    ird.generate('test')
+    output = ird.generate('test')
 
     print(json.dumps(ird.meta))
-    print(json.dumps(test_output))
+    print(json.dumps(output))
 

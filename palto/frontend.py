@@ -8,3 +8,8 @@ def get_server_info(config):
 
     frontend = config['frontend']
     return { "host" : frontend['host'], "port" : frontend['port'] }
+
+def get_base_url(config):
+    server_info = get_server_info(config)
+
+    return 'http://{}:{}/'.format(server_info['host'], server_info['port'])

@@ -5,7 +5,8 @@ import json
 import mimeparse
 
 class TestBackend(AbstractNetworkMapBackend):
-
+    """
+    """
     def __init__(self, config):
         AbstractNetworkMapBackend.__init__(self, config, filtered = True)
 
@@ -26,5 +27,5 @@ class TestBackend(AbstractNetworkMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractNetworkMapBackend.post(self, request, response, actual_post)
 
-def create_instance(config, global_config):
+def create_instance(rid, config, global_config):
     return TestBackend(config)
