@@ -126,8 +126,10 @@ class BasicIRDResource():
         output = self.args
         output['resource-id'] = self.rid
         output['output'] = self.service
-        output['capabilities'] = self.capabilities
-        output['uses'] = [ x for x in self.uses ]
+        if len(self.capabilities) > 0:
+            output['capabilities'] = self.capabilities
+        if len(self.uses) > 0:
+            output['uses'] = [ x for x in self.uses ]
         return output
 
     def add_capabilities(self, capabilities = {}):

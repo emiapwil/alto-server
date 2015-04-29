@@ -64,7 +64,9 @@ def get_instances(global_config, providers):
             provider = providers[clazz]
 
             _create_instance = getattr(provider, 'create_instance')
-            instances[rid] = _create_instance(rid, config, global_config)
+            instance = _create_instance(rid, config, global_config)
+            if instance is not None:
+                instances[rid] = instance
         except Exception as e:
             logging.warn('Failed to parse backend instance: %s : %s', f, e)
 
