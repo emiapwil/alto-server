@@ -9,6 +9,17 @@ In current approach we require the following python libraries:
 
 ## Architecture
 
+See [architecture](docs/architecture.png).
+
+Each instance **MAY** have multiple roles. The only one required is the *HTTP
+service provider* which is named `palto.Backend` currently.
+
+Only if the backend instance wants to be included in the IRD provided by palto
+server, the `ird` section in the corresponding configuration file **CAN** and
+**MUST** be provided. In that circumstance, the instance has to implement the
+`BasicIRDResource` interface. The *mountpoint* option in *ird* section specifies
+where the resource wants to register itself.
+
 ### Front-end
 
 We will be using [bottle][bottle.py] to provide RESTful service.
