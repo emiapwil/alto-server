@@ -49,3 +49,23 @@ python -m palto.rfc7285.irdhandler
 
 The support for network map is implemented. The example data file can be found
 in `examples/static_file/networkmap.json`.
+
+## Testing static file back-end
+
+Run the following command in one terminal to start the server:
+
+~~~
+python -m palto.server -c examples/palto.conf
+~~~
+
+Then run the following command in another terminal to see the result:
+
+~~~
+curl -D - -X GET http://localhost:3400/test_sf
+~~~
+
+You can also run the following command to see the generated ird:
+
+~~~
+curl -D - -X GET http://localhost:3400/
+~~~
