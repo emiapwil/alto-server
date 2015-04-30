@@ -3,6 +3,7 @@
 from palto import Backend
 from palto.ird import BasicIRDResource
 from palto.rfc7285 import AbstractNetworkMapBackend
+from palto.rfc7285 import AbstractCostMapBackend
 from palto import palto_config
 
 import logging
@@ -22,8 +23,23 @@ class StaticFileNetworkMapBackend(AbstractNetworkMapBackend, BasicIRDResource):
         actual_get = lambda req, rep: self._data
         return AbstractNetworkMapBackend.get(self, request, response, actual_get)
 
+class StaticFileCostMapBackend(AbstractCostMapBackend, BasicIRDResource):
+    """
+    """
+
+    def __init__(self, config, global_config, rid, **args):
+        meta, data = args.pop('meta'), args.pop('data')
+        AbstractCostMapBackend.__init__(self, config)
+        BasicIRDResource.__init__(self, rid, **meta)
+        self._data = data
+
+    def get(self, request, response, actual_get = None):
+        actual_get = lambda req, rep: self._data
+        return AbstractCostMapBackend.get(self, request, response, actual_get)
+
 creators = {
     'networkmap' : StaticFileNetworkMapBackend,
+    'costmap' : StaticFileCostMapBackend,
 }
 
 def create_instance(rid, config, global_config):
