@@ -25,7 +25,7 @@ def not_supported(response):
 def mime_matches(provides, required):
     return len(mimeparse.best_match(provides, required)) > 0
 
-def process(request, response, do_process):
+def check_and_run(do_process, request, response):
     if do_process is None:
         return not_implemented(response)
     return do_process(request, response)
@@ -82,7 +82,7 @@ class AbstractIRDBackend(BasicAbstractBackend):
             return not_acceptable(response)
 
         response.set_header('content-type', mimetypes.IRD)
-        return process(request, response, actual_get)
+        return check_and_run(actual_get, request, response)
 
 class FilterableMapBackend(BasicAbstractBackend):
     """
@@ -99,7 +99,7 @@ class FilterableMapBackend(BasicAbstractBackend):
             return not_acceptable(response)
 
         response.set_header('content-type', self.mime.provides(0))
-        return process(request, response, actual_get)
+        return check_and_run(actual_get, request, response)
 
     def post(self, request, response, actual_post = None):
         if not self.filtered:
@@ -109,7 +109,7 @@ class FilterableMapBackend(BasicAbstractBackend):
             return not_supported(response)
 
         response.set_header('content-type', self.mime.provides(0))
-        return process(request, response, actual_post)
+        return check_and_run(actual_post, request, response)
 
 class AbstractNetworkMapBackend(FilterableMapBackend):
     """
@@ -147,7 +147,7 @@ class AbstractEndpointXXXMapBackend(BasicAbstractBackend):
             return not_supported(response)
 
         response.set_header('content-type', self.mime.provides(0))
-        return process(request, response, actual_post)
+        return check_and_run(actual_post, request, response)
 
 class AbstractEndpointPropMapBackend(AbstractEndpointXXXMapBackend):
     """
