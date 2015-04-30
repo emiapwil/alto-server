@@ -72,7 +72,8 @@ python -m palto.server -c examples/palto.conf
 Then run the following command in another terminal to see the result:
 
 ~~~
-curl -D - -X GET http://localhost:3400/test_sf
+curl -D - -X GET http://localhost:3400/test_sf_networkmap
+curl -D - -X GET http://localhost:3400/test_sf_costmap
 ~~~
 
 You can also run the following command to see the generated ird:
