@@ -68,7 +68,7 @@ class ODLAdapter:
         logging.error('ODLAdapter: %s failed', operation)
         logging.error('ODLAdapter: Status: %s', resp.status_code)
         logging.error('ODLAdapter: Response body: %s', resp.text)
-        return False
+        raise RuntimeError(resp.text)
 
     def to_json(self, dict_data):
         return json.dumps(dict_data, separators=(',', ':'))

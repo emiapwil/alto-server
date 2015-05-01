@@ -4,6 +4,8 @@ from .. import Backend
 from . import mimetypes
 
 import mimeparse
+import logging
+import distutils.util
 
 def not_implemented(response):
     response.status = 501 # Not implemented
@@ -28,7 +30,11 @@ def mime_matches(provides, required):
 def check_and_run(do_process, request, response):
     if do_process is None:
         return not_implemented(response)
-    return do_process(request, response)
+    try:
+        return do_process(request, response)
+    except Exception as e:
+        response.set_header('content-type', mimetypes.ERROR)
+        raise e
 
 class BasicAbstractBackend(Backend):
     """
@@ -89,6 +95,12 @@ class FilterableMapBackend(BasicAbstractBackend):
     """
 
     def __init__(self, config, consumes, provides, filtered = False):
+        try:
+            _filtered = distutils.util.strtobool(config.get('basic', 'filtered', fallback='False'))
+            filtered = filtered or (_filtered == 1)
+        except Exception as e:
+            logging.warning('Invalid value for filtered option: %s', e)
+            raise e
         allowed = ['GET', 'POST'] if filtered else ['GET']
         BasicAbstractBackend.__init__(self, config, allowed)
         self.mime = MIMEHelper(consumes, provides)
