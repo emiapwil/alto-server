@@ -161,7 +161,7 @@ def create_instance(resource_id, config, global_config):
     baseurl = palto.frontend.get_base_url(global_config)
     networkmaps = config.get('ecslite', 'networkmaps').split(',')
     networkmaps = { nm for nm in [x.strip() for x in networkmaps] }
-    costmap = config.get('ecslite', 'costmaps')
+    costmap = config.get('ecslite', 'costmap')
 
     if len(networkmaps) == 0 or costmap is None:
         logging.error('ECSLite requires networkmaps and costmap')
