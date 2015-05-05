@@ -9,6 +9,14 @@ packages such as `configparser` often comes with a python distribution)
 - [`mimeparse`][mimeparse],
 - [`SubnetTree`][subnettree]
 
+Also since the packages in [backends](backends) are required using the example
+configuration file, the path must be added to the python path before running the
+server. It can be done by putting the following line in files such as `.bashrc`:
+
+~~~bash
+export PYTHONPATH=$PATH_TO_ALTO_SERVER:$PATH_TO_ALTO_SERVER_BACKENDS:$PYTHONPATH
+~~~
+
 ## Architecture
 
 See [architecture](docs/architecture.png).
