@@ -84,3 +84,14 @@ You can also run the following command to see the generated ird:
 ~~~
 curl -D - -X GET http://localhost:3400/
 ~~~
+
+# About the ECSLite
+
+See [ECSLite](backends/paltoecslite/README.md)
+
+# Features in the Future
+
+- Improve the code structure for server/backend/frontend
+- Management interface for palto
+- Dependency management and tracing (especially for ODL-backend)
+- Tag support
