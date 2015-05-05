@@ -4,10 +4,10 @@
 section 11.5.1 of RFC 7285. It finds the PIDs of the input endpoints from a list
 of network maps and returns the corresponding cost in the cost map.
 
-See [example config](examples/resources/test_ecslite.conf) for how to configure
+See [example config](../../examples/resources/test_ecslite.conf) for how to configure
 it.
 
-There is also an [example input](examples/input/ecs.json) that can be used to
+There is also an [example input](../../examples/input/ecs.json) that can be used to
 test the service by executing
 
 ~~~bash
