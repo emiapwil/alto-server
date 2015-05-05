@@ -132,11 +132,17 @@ class BasicIRDResource():
             output['uses'] = [ x for x in self.uses ]
         return output
 
+    def get_capabilities(self):
+        return self.capabilities
+
     def add_capabilities(self, capabilities = {}):
         self.capabilities.update(capabilities)
 
     def uses(self, new_uses):
         self.uses.update(new_uses)
+
+    def get_uses(self):
+        return self.uses
 
 
 class BasicIRDHandler():

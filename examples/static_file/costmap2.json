@@ -4,7 +4,7 @@
         "capabilities" : {
             "cost-types" : [
             {
-                "cost-mode" : "numerical",
+                "cost-mode" : "ordinal",
                 "cost-metric" : "routingcost"
             }
             ]
@@ -23,14 +23,14 @@
             }
           	],
             "cost-type" : {
-				"cost-mode": "numerical",
+				"cost-mode": "ordinal",
                 "cost-metric": "routingcost"
             }
         },
         "cost-map" : {
-            "PID1": { "PID1": 1, "PID2": 5, "PID3": 10 },
-            "PID2": { "PID1": 5, "PID2": 1, "PID3": 15 },
-            "PID3": { "PID1": 20, "PID2": 15 }
+            "PID1": { "PID1": 1, "PID2": 2, "PID3": 3 },
+            "PID2": { "PID1": 3, "PID2": 1, "PID3": 2 },
+            "PID3": { "PID1": 2, "PID2": 3 }
         }
     }
 }

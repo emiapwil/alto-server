@@ -44,7 +44,7 @@ class PaltoServer():
 
     def run(self):
         server_info = self.server_info
-        bottle.run(host=server_info['host'], port=server_info['port'], debug=True)
+        bottle.run(debug=True, **server_info)
 
     def get_instance():
         return PaltoServer.instance

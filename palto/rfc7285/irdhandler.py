@@ -57,14 +57,14 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
     def matches(rid, resource):
         if 'costmap' != resource.service:
             return False
-        if not 'cost-types' in resource.capabilities:
-            logging.warn('Resource %s declares costmap but supports no cost-types', rid)
+        if not 'cost-types' in resource.get_capabilities():
+            logging.warning('Resource %s declares costmap but supports no cost-types', rid)
             return False
         return True
 
     def get_name_from_dict(rid, cost_type):
         if ('cost-mode' not in cost_type) or ('cost-metric' not in cost_type):
-            logging.warn('Resource %s has invalid cost_type %s', rid, cost_type)
+            logging.warning('Resource %s has invalid cost_type %s', rid, cost_type)
             return None
         mode, metric = cost_type['cost-mode'], cost_type['cost-metric']
         name = CostType2CostTypeNameHandler.generate_costtype_name(mode, metric)
@@ -76,7 +76,8 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
         if not CostType2CostTypeNameHandler.matches(rid, resource):
             return
 
-        for cost_type in resource.capabilities['cost-types']:
+        capabilities = resource.get_capabilities()
+        for cost_type in capabilities['cost-types']:
             name = CostType2CostTypeNameHandler.get_name_from_dict(rid, cost_type)
             if name is None:
                 continue
@@ -95,7 +96,8 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
         if not CostType2CostTypeNameHandler.matches(rid, resource):
             return
 
-        for cost_type in resource.capabilities['cost-types']:
+        capabilities = resource.get_capabilities()
+        for cost_type in capabilities['cost-types']:
             if not 'cost-types' in meta:
                 break
 

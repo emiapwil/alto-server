@@ -2,10 +2,12 @@
 
 ## Prerequisites
 
-In current approach we require the following python libraries:
+In current approach we require the following extra python libraries (some other
+packages such as `configparser` often comes with a python distribution)
 
 - [`bottle.py`][bottle.py],
-- [`mimeparse`][mimeparse]
+- [`mimeparse`][mimeparse],
+- [`SubnetTree`][subnettree]
 
 ## Architecture
 
@@ -55,6 +57,7 @@ python -m palto.rfc7285.irdhandler
 
 [bottle.py]: http://bottlepy.org/
 [mimeparse]: https://github.com/dbtsai/python-mimeparse
+[subnettree]: https://github.com/bro/pysubnettree
 
 # About Static File Back-end
 

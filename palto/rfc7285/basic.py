@@ -154,7 +154,7 @@ class AbstractEndpointXXXMapBackend(BasicAbstractBackend):
         BasicAbstractBackend.__init__(self, config, ['POST'])
         self.mime = MIMEHelper(consumes, provides)
 
-    def post(self, request, response, actual_get = None):
+    def post(self, request, response, actual_post = None):
         if not self.mime.can_consume(request.get_header('content-type')):
             return not_supported(response)
 
