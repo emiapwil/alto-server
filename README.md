@@ -67,6 +67,47 @@ python -m palto.rfc7285.irdhandler
 [mimeparse]: https://github.com/dbtsai/python-mimeparse
 [subnettree]: https://github.com/bro/pysubnettree
 
+# About Advanced `PaltoServer` and `PaltoManager`
+
+A progress to enhance the management ability of `palto` is on-going. A new
+`PaltoServer` and `PaltoManager` are implemented. Trying them out with:
+
+~~~bash
+python -m palto.paltoserver
+
+python -m palto.paltomanager
+~~~
+
+And you can use the following commands to test them out:
+
+~~~bash
+# for paltoserver
+
+## should get 501
+curl -D - -X GET http://localhost:3400/test
+
+## should get 200
+curl -D - -X GET http://localhost:3400/get_baseurl
+
+# for paltomanager
+
+## should get 404
+curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+
+## should get 200
+curl -D - -X POST --data-binary @examples/input/test_staticfile.conf \
+      http://localhost:3400/add-backend/test_sf_networkmap
+
+## should get 200
+curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+
+## should get 200
+curl -D - -X POST http://localhost:3400/remove-backend/test_sf_networkmap
+
+## should get 404 again
+curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+~~~
+
 # About Static File Back-end
 
 The support for network map is implemented. The example data file can be found

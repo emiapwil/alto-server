@@ -6,35 +6,15 @@ from . import mimetypes
 import mimeparse
 import logging
 import distutils.util
-
-def not_implemented(response):
-    response.status = 501 # Not implemented
-    return ''
-
-def not_acceptable(response):
-    response.status = 406 # Not acceptable
-    return ''
-
-def not_allowed(response, allow):
-    response.status = 405 # Method not allowed
-    response.set_header('Allow', ','.join(allow))
-    return ''
-
-def not_supported(response):
-    response.status = 415 # media type unsupported
-    return ''
+from .. import errors
 
 def mime_matches(provides, required):
     return len(mimeparse.best_match(provides, required)) > 0
 
 def check_and_run(do_process, request, response):
     if do_process is None:
-        return not_implemented(response)
-    try:
-        return do_process(request, response)
-    except Exception as e:
-        response.set_header('content-type', mimetypes.ERROR)
-        raise e
+        return errors.not_implemented(response)
+    return do_process(request, response)
 
 class BasicAbstractBackend(Backend):
     """
@@ -45,16 +25,16 @@ class BasicAbstractBackend(Backend):
         self.allowed = allowed
 
     def get(self, request, response, actual_get = None):
-        return not_allowed(response, self.allowed)
+        return errors.not_allowed(response, self.allowed)
 
     def post(self, request, response, actual_post = None):
-        return not_allowed(response, self.allowed)
+        return errors.not_allowed(response, self.allowed)
 
     def put(self, request, response, actual_put = None):
-        return not_allowed(response, self.allowed)
+        return errors.not_allowed(response, self.allowed)
 
     def delete(self, request, response, actual_delete = None):
-        return not_allowed(response, self.allowed)
+        return errors.not_allowed(response, self.allowed)
 
 class MIMEHelper():
     """
@@ -85,7 +65,7 @@ class AbstractIRDBackend(BasicAbstractBackend):
     def get(self, request, response, actual_get = None):
         provides = AbstractIRDBackend.PROVIDES
         if not mime_matches(provides, request.get_header('accept')):
-            return not_acceptable(response)
+            return errors.not_acceptable(response)
 
         response.set_header('content-type', mimetypes.IRD)
         return check_and_run(actual_get, request, response)
@@ -108,17 +88,17 @@ class FilterableMapBackend(BasicAbstractBackend):
 
     def get(self, request, response, actual_get = None):
         if not self.mime.can_provide(request.get_header('accept')):
-            return not_acceptable(response)
+            return errors.not_acceptable(response)
 
         response.set_header('content-type', self.mime.provides(0))
         return check_and_run(actual_get, request, response)
 
     def post(self, request, response, actual_post = None):
         if not self.filtered:
-            return not_allowed(response, ['GET'])
+            return errors.not_allowed(response, ['GET'])
 
         if not self.mime.can_consume(request.get_header('content-type')):
-            return not_supported(response)
+            return errors.not_supported(response)
 
         response.set_header('content-type', self.mime.provides(0))
         return check_and_run(actual_post, request, response)
@@ -156,7 +136,7 @@ class AbstractEndpointXXXMapBackend(BasicAbstractBackend):
 
     def post(self, request, response, actual_post = None):
         if not self.mime.can_consume(request.get_header('content-type')):
-            return not_supported(response)
+            return errors.not_supported(response)
 
         response.set_header('content-type', self.mime.provides(0))
         return check_and_run(actual_post, request, response)

@@ -3,8 +3,8 @@
 from .odl_adapter import ODLAdapter
 from palto.rfc7285 import AbstractNetworkMapBackend
 from palto.ird import BasicIRDResource
-from palto.rfc7285.basic import not_implemented
 from palto import palto_config
+from palto import errors
 
 import logging
 
@@ -32,7 +32,7 @@ class OpenDaylightNetworkMapBackend(AbstractNetworkMapBackend, BasicIRDResource)
         return AbstractNetworkMapBackend.get(self, request, response, actual_get)
 
     def post(self, request, response):
-        return not_implemented(response)
+        return errors.not_implemented(response)
 
 creators = {
     'networkmap' : OpenDaylightNetworkMapBackend,

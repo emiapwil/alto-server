@@ -9,11 +9,6 @@ import traceback
 from . import palto_config, frontend, backend
 from .rfc7285 import mimetypes
 
-@bottle.route('/test')
-def test():
-    bottle.response.set_header('Content-type', 'applicatoin/test+json')
-    return json.dumps({ 'a' : 1, 'b' : 2})
-
 class PaltoServer():
     """
     """
@@ -72,7 +67,7 @@ def dispatch(name, task_template):
     bottle.response.status = 404
     return "No such service"
 
-@bottle.get('/<name:re:.*>')
+@bottle.get('/<name:re:.*>', name='alto_get')
 def palto_get(name):
     get = lambda backend, request, response: backend.get(request, response)
     return dispatch(name, get)
