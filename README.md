@@ -95,14 +95,16 @@ curl -D - -X GET http://localhost:3400/get_baseurl
 curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ## should get 200
-curl -D - -X POST --data-binary @examples/input/test_staticfile.conf \
-      http://localhost:3400/add-backend/test_sf_networkmap
+curl -D - -X POST -u test:test \
+      --data-binary @examples/input/test_staticfile.conf \
+      http://localhost:3400/admin/add-backend/test_sf_networkmap
 
 ## should get 200
 curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ## should get 200
-curl -D - -X POST http://localhost:3400/remove-backend/test_sf_networkmap
+curl -D - -X POST -u test:test \
+      http://localhost:3400/admin/remove-backend/test_sf_networkmap
 
 ## should get 404 again
 curl -D -X GET http://localhost:3400/alto/test_sf_networkmap

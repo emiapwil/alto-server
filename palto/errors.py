@@ -19,6 +19,11 @@ def bad_request(response, **kargs):
     response.status = 400 # Bad request
     return format_error(response, **kargs)
 
+def unauthorized(response, auth_method, **kargs):
+    response.status = 401 # unauthorized
+    response.set_header('WWW-Authenticate', auth_method)
+    return format_error(response, **kargs)
+
 def not_found(response, service=None):
     response.status = 404 # Not found
     if service is not None:

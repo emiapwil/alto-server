@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base64
 import bottle
 import configparser
 import json
@@ -24,18 +25,52 @@ def create_instance(provider, *args):
     except Exception as e:
         raise Exception('Error while creating instance: %s', e)
 
-def load_config_from_request(callback):
-    def wrapper(name):
+def load_backend_config(callback):
+    def wrapper(*args, **kargs):
         try:
             config_str = bottle.request.body.getvalue().decode()
             config = configparser.ConfigParser()
             config.read_string(config_str)
 
-            callback(name, config)
+            kargs['config'] = config
+            return callback(*args, **kargs)
         except Exception as e:
             return errors.server_error(bottle.response, exception = e)
 
     return wrapper
+
+class SimpleAuthenticationPlugin():
+    """
+    """
+
+    name = 'simple_auth'
+    api = 2
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
+    def setup(self, app):
+        for other in app.plugins:
+            if not isinstance(other, SimpleAuthenticationPlugin):
+                continue
+            raise PluginError('Found another SimpleAuthenticationPlugin')
+
+    def apply(self, callback, context):
+        def wrapper(*args, **kwargs):
+            try:
+                auth_hdr = bottle.request.get_header('authorization', '').split(' ')
+                method, key = auth_hdr[0], ' '.join(auth_hdr[1:])
+                if method.lower() != 'basic':
+                    return errors.unauthorized(bottle.response, 'Basic')
+                username, password = base64.b64decode(key).decode().split(':')
+                if username != self.username or password != self.password:
+                    return errors.unauthorized(bottle.response, 'Basic')
+                return callback(*args, **kwargs)
+            except Exception as e:
+                return errors.server_error(bottle.response, exception=e)
+
+        return wrapper
 
 
 class PaltoManager(bottle.Bottle):
@@ -49,18 +84,22 @@ class PaltoManager(bottle.Bottle):
         self.server = server
         self.providers = {}
         self.config = kargs.pop('config', configparser.ConfigParser())
-        self.setup_routes()
+        self.setup_routes(**kargs)
 
-    def setup_routes(self):
-        plugin = lambda callback: load_config_from_request(callback)
-        add_backend = lambda name, config: self.add_backend_route(name, config)
-        remove_backend = lambda name, config: self.remove_backend_route(name)
+    def setup_routes(self, **kargs):
+        plugin = lambda callback: load_backend_config(callback)
+        add_backend = lambda name, config=None: self.add_backend_route(name, config)
+        remove_backend = lambda name, config=None: self.remove_backend_route(name)
 
         callbacks = {'add-backend' : add_backend, 'remove-backend' : remove_backend}
         for prefix, callback in callbacks.items():
-            path = '/{}/{}'.format(prefix, paltoserver.BACKEND_NAME_PATTERN)
+            path = '/admin/{}/{}'.format(prefix, paltoserver.BACKEND_NAME_PATTERN)
             r = bottle.Route(self, path, 'POST', callback, plugins=[plugin])
             self.add_route(r)
+
+        auth_plugin = kargs.pop('auth', None)
+        if auth_plugin is not None:
+            self.install(auth_plugin)
 
     def install_route(self, plugin_name, **kargs):
         pass
@@ -90,8 +129,9 @@ class PaltoManager(bottle.Bottle):
 if __name__ == '__main__':
     from .paltoserver import PaltoServer
 
+    auth_plugin = SimpleAuthenticationPlugin('test', 'test')
     pserver = PaltoServer()
-    pmanager = PaltoManager(pserver, catchall=False)
+    pmanager = PaltoManager(pserver, auth=auth_plugin, catchall=False)
 
     pmanager.mount('/alto/', pserver)
     pmanager.run(host='localhost', port=3400, debug=True)
