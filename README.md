@@ -78,6 +78,20 @@ python -m palto.paltoserver
 python -m palto.paltomanager
 ~~~
 
+There are currently 4 basic operations on `PaltoManager`:
+
+- `add-backend`/`remove-backend`: add/remove a backend from the managed
+  `PaltoServer` by making a **POST** request to `/admin/<operation>/<name>`
+- `install`/`uninstall`: install/uninstall a bottle plugin from either the
+  `PaltoManager` or the `PaltoServer`, depending on the `target` parameter,
+  by making a **POST** request to `/admin/<operation>/<target>/<name>`
+
+The content of the **POST** request would be treated as a configuration file.
+All the operations would require a `provider` option in the `basic` section.
+The provider module must come with a `create_instance` method which takes the
+`name`, `config`(parsed from the request) and `global_config`(initialized when
+the manager is launched and maintained by the manager).
+
 And you can use the following commands to test them out:
 
 ~~~bash
@@ -106,8 +120,24 @@ curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
 curl -D - -X POST -u test:test \
       http://localhost:3400/admin/remove-backend/test_sf_networkmap
 
+## should get 200
+curl -D -X POST -u test:test \
+      --data-binary @examples/input/test_plugin.conf \
+      http://localhost:3400/admin/install/paltoserver/test_plugin
+
+## should get 200 and see some output in the server console
+curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+
+## should get 200
+curl -D -X POST -u test:test \
+      http://localhost:3400/admin/uninstall/paltoserver/test_plugin
+
+## should get 200 and see no output in the server console
+curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+
 ## should get 404 again
 curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+
 ~~~
 
 # About Static File Back-end
