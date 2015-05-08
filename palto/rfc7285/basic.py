@@ -151,7 +151,7 @@ class AbstractEndpointPropMapBackend(AbstractEndpointXXXMapBackend):
     def __init__(self, config):
         consumes = AbstractEndpointPropMapBackend.CONSUMES
         provides = AbstractEndpointPropMapBackend.PROVIDES
-        AbstractEndpointXXXBackend.__init__(self, config, consumes, provides)
+        AbstractEndpointXXXMapBackend.__init__(self, config, consumes, provides)
 
 class AbstractEndpointCostMapBackend(AbstractEndpointXXXMapBackend):
     """

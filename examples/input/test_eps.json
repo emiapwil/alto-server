@@ -1,0 +1,7 @@
+{
+	"endpoints": [
+		"ipv4:192.0.2.34",
+		"ipv4:203.0.113.129"
+	],
+	"properties": [ "test_sf_networkmap.pid" ]
+}

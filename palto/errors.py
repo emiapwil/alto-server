@@ -19,7 +19,6 @@ def format_error(response = bottle.response, message='', exception = None):
     response.set_header('content-type', mimetypes.ERROR)
     if exception is not None:
         traceback.print_tb(exception.__traceback__)
-    print('hello')
     return message
 
 def bad_request(response = bottle.response, **kargs):

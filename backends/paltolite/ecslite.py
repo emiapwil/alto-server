@@ -7,18 +7,13 @@ from SubnetTree import SubnetTree
 import palto.frontend
 import palto.utils
 from palto.utils import correct_inet_format, cost_type_match
-
-def encode_addr(family, addr):
-    return '{}:{}'.format(family, addr)
-
-def decode_addr(addr):
-    return addr.split(':')
+from .utils import reverse_networkmap, encode_addr, decode_addr
 
 class ECSLite(AbstractEndpointCostMapBackend):
     """
     """
 
-    def __init__(self, config, networkmaps = set(), costmap = None):
+    def __init__(self, config, networkmaps = set(), costmap = None, urls = {}):
         if (networkmaps is None) or (len(networkmaps) == 0):
             raise Exception("Missing dependency: ECSLite requires network maps")
         if costmap is None:
@@ -27,16 +22,19 @@ class ECSLite(AbstractEndpointCostMapBackend):
         AbstractEndpointCostMapBackend.__init__(self, config)
         self.networkmaps = networkmaps
         self.costmap = costmap
+        self.urls = urls
 
     def setup_pid_mapping(networkmaps):
-        mapping = { 'ipv4' : SubnetTree(), 'ipv6' : SubnetTree() }
+        mapping = {}
         for url in networkmaps:
-            networkmap = palto.utils.get_json_map(url, ['network-map'])['network-map']
-            for pid, groups in networkmap.items():
-                for family, prefixes in groups.items():
-                    prefixes = [ p for p in prefixes if correct_inet_format(family, p) ]
-                    for p in prefixes:
-                        mapping[family][p] = pid
+            try:
+                networkmap = palto.utils.get_json_map(url, ['meta', 'network-map'])
+                nm_data = networkmap['network-map']
+                mapping = reverse_networkmap(nm_data, mapping)
+            except Exception as e:
+                logging.warning('Failed to get data from %s', url)
+                continue
+
         return mapping
 
     def parse_input(data):
@@ -105,7 +103,8 @@ class ECSLite(AbstractEndpointCostMapBackend):
             raise e
 
         try:
-            mapping = ECSLite.setup_pid_mapping(self.networkmaps)
+            networkmap_urls = { self.urls[nm] for nm in self.networkmaps }
+            mapping = ECSLite.setup_pid_mapping(networkmap_urls)
             src_pids = ECSLite.find_pid(mapping, srcs)
             dst_pids = ECSLite.find_pid(mapping, dsts)
         except Exception as e:
@@ -113,7 +112,8 @@ class ECSLite(AbstractEndpointCostMapBackend):
             raise e
 
         try:
-            costs = ECSLite.get_costs(self.costmap, cost_type, src_pids, dst_pids)
+            costmap_url = self.urls[self.costmap]
+            costs = ECSLite.get_costs(costmap_url, cost_type, src_pids, dst_pids)
         except Exception as e:
             logging.error('Failed to get costs: %s', e)
             raise e
@@ -126,14 +126,15 @@ class ECSLite(AbstractEndpointCostMapBackend):
 
 def create_instance(resource_id, config, global_config):
     networkmaps = config.get('ecslite', 'networkmaps').split(',')
-    networkmaps = { nm for nm in [x.strip() for x in networkmaps] }
+    networkmaps = { x.strip() for x in networkmaps }
     costmap = config.get('ecslite', 'costmap')
 
     if len(networkmaps) == 0 or costmap is None:
         logging.error('ECSLite requires networkmaps and costmap')
         return None
 
-    nm_urls = { palto.frontend.get_url(global_config, nm) for nm in networkmaps }
-    cm_url = palto.frontend.get_url(global_config, costmap)
+    urls = {}
+    urls.update({ nm: palto.frontend.get_url(global_config, nm) for nm in networkmaps })
+    urls.update({ costmap: palto.frontend.get_url(global_config, costmap) })
 
-    return ECSLite(config, nm_urls, cm_url)
+    return ECSLite(config, networkmaps, costmap, urls)
