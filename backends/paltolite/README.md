@@ -42,3 +42,22 @@ Use the following command to test it out:
 ~~~bash
 curl -D - -H "content-type: application/alto-costmapfilter+json" \
       -X POST -d @examples/input/test_fcm.json http://localhost:3400/fcmlite
+~~~
+
+# About EPSLite
+
+`EPSLite` is a simple implementation for *endpoint property service* defined in
+section 11.4.1 of RFC 7285. Currently it only supports fetching the
+corresponding PID from the dependent network maps.
+
+See [example_config](../../examples/resources/test_epslite.conf) for how to
+configure it.
+
+There is also an [example input](../../examples/input/test_eps.json) that can be
+used to test the service by executing
+
+~~~bash
+curl -D - -H 'content-type: application/alto-endpointpropparams+json' \
+      -d @examples/input/test_eps.json -X POST \
+      http://localhost:3400/test_epslite
+~~~
