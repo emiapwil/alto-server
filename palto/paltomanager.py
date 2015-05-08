@@ -80,7 +80,8 @@ class PaltoManager(bottle.Bottle):
         self.setup_routes(**kargs)
 
     def setup_routes(self, **kargs):
-        plugin = lambda callback: load_backend_config(callback)
+        load_conf_plugin = lambda callback: load_backend_config(callback)
+
         add_backend = lambda name, config: self.add_backend_route(name, config)
         remove_backend = lambda name, config: self.remove_backend_route(name)
         install = lambda target, name, config: self.install_route(target, name, config)
@@ -89,13 +90,13 @@ class PaltoManager(bottle.Bottle):
         callbacks = {'add-backend' : add_backend, 'remove-backend' : remove_backend}
         for prefix, callback in callbacks.items():
             path = '/admin/{}/{}'.format(prefix, paltoserver.BACKEND_NAME_PATTERN)
-            r = bottle.Route(self, path, 'POST', callback, plugins=[plugin])
+            r = bottle.Route(self, path, 'POST', callback, plugins=[load_conf_plugin])
             self.add_route(r)
 
         callbacks = {'install' : install, 'uninstall' : uninstall }
         for prefix, callback in callbacks.items():
             path = '/admin/{}/<target>/<name>'.format(prefix)
-            r = bottle.Route(self, path, 'POST', callback, plugins=[plugin])
+            r = bottle.Route(self, path, 'POST', callback, plugins=[load_conf_plugin])
             self.add_route(r)
 
         auth_plugin = kargs.pop('auth', None)

@@ -1,30 +1,12 @@
 #!/usr/bin/env python3
 
 from palto.rfc7285 import AbstractEndpointCostMapBackend
-import requests
 import logging
-import ipaddress
 import json
 from SubnetTree import SubnetTree
 import palto.frontend
-
-def success(code):
-    return (code == 200) or (code == 204)
-
-network_type = {
-    'ipv4' : ipaddress.IPv4Network,
-    'ipv6' : ipaddress.IPv6Network
-}
-
-def correct_format(family, prefix):
-    if family not in network_type:
-        return False
-    return type(ipaddress.ip_network(prefix)) is network_type[family]
-
-def cost_type_match(x, y):
-    mode_match = (x['cost-mode'] == y['cost-mode'])
-    metric_match = (x['cost-metric'] == y['cost-metric'])
-    return (mode_match and metric_match)
+import palto.utils
+from palto.utils import correct_inet_format, cost_type_match
 
 def encode_addr(family, addr):
     return '{}:{}'.format(family, addr)
@@ -36,34 +18,23 @@ class ECSLite(AbstractEndpointCostMapBackend):
     """
     """
 
-    def __init__(self, config, baseurl, networkmaps = set(), costmap = None):
+    def __init__(self, config, networkmaps = set(), costmap = None):
         if (networkmaps is None) or (len(networkmaps) == 0):
             raise Exception("Missing dependency: ECSLite requires network maps")
         if costmap is None:
             raise Exception("Missing dependency: ECSLite requires cost maps")
 
         AbstractEndpointCostMapBackend.__init__(self, config)
-        self.baseurl = baseurl
         self.networkmaps = networkmaps
         self.costmap = costmap
 
-    def get_map(url, data_section):
-        response = requests.get(url)
-        if not success(response.status_code):
-            raise Exception('Failed to fetch data from {}'.format(m))
-        data = response.json()
-        if not data_section in data:
-            raise Exception('Failed to get map data from {}'.format(m))
-        return data
-
-    def setup_pid_mapping(networkmaps, baseurl):
+    def setup_pid_mapping(networkmaps):
         mapping = { 'ipv4' : SubnetTree(), 'ipv6' : SubnetTree() }
-        for m in networkmaps:
-            url = '{}{}'.format(baseurl, m)
-            networkmap = ECSLite.get_map(url, 'network-map')['network-map']
+        for url in networkmaps:
+            networkmap = palto.utils.get_json_map(url, ['network-map'])['network-map']
             for pid, groups in networkmap.items():
                 for family, prefixes in groups.items():
-                    prefixes = [ p for p in prefixes if correct_format(family, p) ]
+                    prefixes = [ p for p in prefixes if correct_inet_format(family, p) ]
                     for p in prefixes:
                         mapping[family][p] = pid
         return mapping
@@ -83,7 +54,7 @@ class ECSLite(AbstractEndpointCostMapBackend):
             if not family in mapping:
                 logging.warning('Family %s not supported', family)
                 continue
-            if not correct_format(family, addr):
+            if not correct_inet_format(family, addr):
                 logging.warning('Bad %s address format %s', family, addr)
                 continue
             if not family in pids:
@@ -91,13 +62,12 @@ class ECSLite(AbstractEndpointCostMapBackend):
             pids[family][addr] = mapping[family][addr]
         return pids
 
-    def get_costs(costmap, baseurl, cost_type, srcs, dsts):
+    def get_costs(costmap, cost_type, srcs, dsts):
         """ TODO
         use filtered cost map instead of cost map
         """
         costs = {}
-        url = '{}{}'.format(baseurl, costmap)
-        data = ECSLite.get_map(url, 'cost-map')
+        data = palto.utils.get_json_map(costmap, ['meta', 'cost-map'])
         _cost_type = data['meta']['cost-type']
         if not cost_type_match(_cost_type, cost_type):
             logging.warning('Cost type %s not supported by %s', cost_type, costmap)
@@ -135,18 +105,15 @@ class ECSLite(AbstractEndpointCostMapBackend):
             raise e
 
         try:
-            mapping = ECSLite.setup_pid_mapping(self.networkmaps, self.baseurl)
+            mapping = ECSLite.setup_pid_mapping(self.networkmaps)
             src_pids = ECSLite.find_pid(mapping, srcs)
             dst_pids = ECSLite.find_pid(mapping, dsts)
-            print(src_pids)
-            print(dst_pids)
         except Exception as e:
             logging.error('Failed to setup the mapping: %s', e)
             raise e
 
         try:
-            costs = ECSLite.get_costs(self.costmap, self.baseurl, cost_type, src_pids, dst_pids)
-            print(costs)
+            costs = ECSLite.get_costs(self.costmap, cost_type, src_pids, dst_pids)
         except Exception as e:
             logging.error('Failed to get costs: %s', e)
             raise e
@@ -158,7 +125,6 @@ class ECSLite(AbstractEndpointCostMapBackend):
         return AbstractEndpointCostMapBackend.post(self, request, response, actual_post)
 
 def create_instance(resource_id, config, global_config):
-    baseurl = palto.frontend.get_base_url(global_config)
     networkmaps = config.get('ecslite', 'networkmaps').split(',')
     networkmaps = { nm for nm in [x.strip() for x in networkmaps] }
     costmap = config.get('ecslite', 'costmap')
@@ -167,4 +133,7 @@ def create_instance(resource_id, config, global_config):
         logging.error('ECSLite requires networkmaps and costmap')
         return None
 
-    return ECSLite(config, baseurl, networkmaps, costmap)
+    nm_urls = { palto.frontend.get_url(global_config, nm) for nm in networkmaps }
+    cm_url = palto.frontend.get_url(global_config, costmap)
+
+    return ECSLite(config, nm_urls, cm_url)

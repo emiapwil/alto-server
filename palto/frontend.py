@@ -17,3 +17,6 @@ def get_base_url(config):
     server_info = get_server_info(config)
 
     return 'http://{}:{}/'.format(server_info['host'], server_info['port'])
+
+def get_url(config, name):
+    return '{}{}'.format(get_base_url(config), name)

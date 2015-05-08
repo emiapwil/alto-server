@@ -166,9 +166,11 @@ You can also run the following command to see the generated ird:
 curl -D - -X GET http://localhost:3400/
 ~~~
 
-# About the ECSLite
+# About the XXXLite
 
-See [ECSLite](backends/paltoecslite/README.md)
+A simple implementation for several services.
+
+See [ECSLite](backends/paltolite/README.md)
 
 # Features in the Future
 

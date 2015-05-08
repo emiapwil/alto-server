@@ -19,3 +19,26 @@ curl -D - -H 'content-type: application/alto-endpointcostparams+json' \
 
 - use filtered cost map instead of cost map
 - check dependencies for the cost map
+
+# About FilteredNetworkMapLite
+
+The mechanism is simple: retrieve data from the network map and pick the
+required data.
+
+Use the following command to test it out:
+
+~~~bash
+curl -D - -H "content-type: application/alto-networkmapfilter+json" \
+      -X POST -d @examples/input/test_fnm.json http://localhost:3400/fnmlite
+~~~
+
+# About FilteredCostMapLite
+
+The mechanism is simple: retrieve data from the cost map and pick the required
+data.
+
+Use the following command to test it out:
+
+~~~bash
+curl -D - -H "content-type: application/alto-costmapfilter+json" \
+      -X POST -d @examples/input/test_fcm.json http://localhost:3400/fcmlite
