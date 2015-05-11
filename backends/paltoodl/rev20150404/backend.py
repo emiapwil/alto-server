@@ -38,7 +38,7 @@ creators = {
     'networkmap' : OpenDaylightNetworkMapBackend,
 }
 
-def create_instance(resource_id, config, global_config):
+def create_instance(resource_id, config, environ):
     if palto_config.has_missing_options(config, 'odl', ODL_INFO):
         logging.warning('Need %s to create odl backend', ODL_INFO)
         return None

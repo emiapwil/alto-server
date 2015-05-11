@@ -28,13 +28,13 @@ class PaltoServer(bottle.Bottle):
             path = '/{}'.format(BACKEND_NAME_PATTERN)
             self.add_route(bottle.Route(self, path, method, callback))
 
-    def get_baseurl(self):
-        return self.get_url('alto-service')
-
     def add_backend(self, name, backend):
         if name in self.backends:
             raise Exception('The name %s has been registered'.format(name))
         self.backends[name] = backend
+
+    def get_backends(self):
+        return self.backends
 
     def get_backend(self, name):
         return self.backends.get(name)
@@ -68,7 +68,6 @@ class PaltoServer(bottle.Bottle):
         delete = lambda backend, request, response: backend.delete(request, response)
         return self.dispatch(name, delete)
 
-
 def test():
     from .rfc7285 import AbstractNetworkMapBackend
     import configparser
@@ -77,7 +76,7 @@ def test():
     server = PaltoServer()
     server.add_backend('test', nmb)
 
-    get_url = lambda : 'base url: {}'.format(server.get_baseurl())
+    get_url = lambda : 'base url: {}'.format(server.get_url('alto-service'))
     server.add_route(bottle.Route(server, '/get_baseurl', 'GET', get_url))
 
     server.run(host='localhost', port=3400, debug=True)

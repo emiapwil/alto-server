@@ -8,13 +8,16 @@ import palto.frontend
 from .utils import reverse_networkmap, encode_addr, decode_addr
 from palto.utils import correct_inet_format
 
+def pid_capability(networkmap):
+    return '.'.join([networkmap, 'pid'])
+
 class EPSLite(AbstractEndpointPropMapBackend):
     """
     """
 
     def __init__(self, config, networkmaps = set(), urls = {}):
         AbstractEndpointPropMapBackend.__init__(self, config)
-        self.prop_urls = { '.'.join([nm, 'pid']): urls[nm] for nm in networkmaps }
+        self.prop_urls = { pid_capability(nm): urls[nm] for nm in networkmaps }
         self.networkmaps = networkmaps
         self.urls = urls
 
@@ -74,12 +77,22 @@ class EPSLite(AbstractEndpointPropMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractEndpointPropMapBackend.post(self, request, response, actual_post)
 
-def create_instance(name, config, global_config):
+def create_instance(name, config, environ):
     networkmaps = config.get('epslite', 'networkmaps').split(',')
     networkmaps = { x.strip() for x in networkmaps }
 
     if len(networkmaps) == 0:
         logging.error('EPSLite requires networkmaps')
 
-    urls = { nm: palto.frontend.get_url(global_config, nm) for nm in networkmaps }
-    return EPSLite(config, networkmaps, urls)
+    urls = { nm: palto.frontend.get_url(environ, nm) for nm in networkmaps }
+
+    ird = {
+        'resource-id': name,
+        'input': 'endpointpropparams',
+        'output': 'endpointprop',
+        'uses': list(set.copy(networkmaps)),
+        'capabilities': [ pid_capability(x) for x in networkmaps ]
+    }
+    instance = EPSLite(config, networkmaps, urls)
+    instance.get_meta = lambda: ird
+    return instance

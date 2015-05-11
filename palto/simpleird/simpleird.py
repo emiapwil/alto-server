@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 from ..rfc7285.basic import AbstractIRDBackend
-from ..rfc7285.irdhandler import ResourceID2URIHandler
-from ..rfc7285.irdhandler import Type2MediaTypeHandler
-from ..rfc7285.irdhandler import CostType2CostTypeNameHandler
+from .irdhandler import ResourceID2URIHandler
+from .irdhandler import Type2MediaTypeHandler
+from .irdhandler import CostType2CostTypeNameHandler
 from ..ird import BasicIRD, BasicIRDResource
 from .. import frontend
 import json
@@ -25,10 +25,10 @@ class SimpleIRDBackend(AbstractIRDBackend, BasicIRD, BasicIRDResource):
         actual_get = lambda req, rep: self._get(req, rep)
         return AbstractIRDBackend.get(self, request, response, actual_get)
 
-def create_instance(rid, config, global_config):
+def create_instance(rid, config, environ):
     instance = SimpleIRDBackend(config, rid)
 
-    rid2uri = ResourceID2URIHandler(frontend.get_base_url(global_config))
+    rid2uri = ResourceID2URIHandler(environ)
     type2media = Type2MediaTypeHandler()
     cost2name = CostType2CostTypeNameHandler()
     names = ['resource-id-to-uri', 'type-to-media-type', 'cost-type-to-name']

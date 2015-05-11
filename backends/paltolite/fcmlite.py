@@ -68,12 +68,12 @@ class FilteredCostMapLite(AbstractCostMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractCostMapBackend.post(self, request, response, actual_post)
 
-def create_instance(name, config, global_config):
+def create_instance(name, config, environ):
     costmap = config.get('fcmlite', 'costmap')
     if costmap is None:
         logging.error('FilteredCostMapLite requires costmap option')
         return None
 
-    cm_url = palto.frontend.get_url(global_config, costmap)
+    cm_url = palto.frontend.get_url(environ, costmap)
     return FilteredCostMapLite(config, cm_url)
 

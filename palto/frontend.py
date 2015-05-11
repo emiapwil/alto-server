@@ -13,10 +13,14 @@ def get_server_info(config):
     info['server'] = config.get('frontend', 'server', fallback='wsgiref')
     return info
 
-def get_base_url(config):
+def get_base_url(environ):
+    config = environ['config']
     server_info = get_server_info(config)
 
-    return 'http://{}:{}/'.format(server_info['host'], server_info['port'])
+    prefix = 'http://{}:{}'.format(server_info['host'], server_info['port'])
+    if 'server' in environ:
+        return lambda: '{}{}/'.format(prefix, config.get('frontend', 'alto-mountpoint'))
+    return lambda: '{}/'.format(prefix)
 
-def get_url(config, name):
-    return '{}{}'.format(get_base_url(config), name)
+def get_url(environ, name):
+    return '{}{}'.format(get_base_url(environ)(), name)

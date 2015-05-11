@@ -28,3 +28,10 @@ def get_json_map(url, required_sections = [], **kargs):
         if not section in data:
             raise Exception('Failed to get map data from {}'.format(url))
     return data
+
+def no_plugin_instance(plugins, clazz):
+    for plugin in plugins:
+        if not isinstance(plugin, clazz):
+            continue
+        return False
+    return True

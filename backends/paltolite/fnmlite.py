@@ -51,12 +51,12 @@ class FilteredNetworkMapLite(AbstractNetworkMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractNetworkMapBackend.post(self, request, response, actual_post)
 
-def create_instance(name, config, global_config):
+def create_instance(name, config, environ):
     networkmap = config.get('fnmlite', 'networkmap')
     if networkmap is None:
         logging.error('FilteredNetworkMapLite requires networkmap option')
         return None
 
-    nm_url = palto.frontend.get_url(global_config, networkmap)
+    nm_url = palto.frontend.get_url(environ, networkmap)
     return FilteredNetworkMapLite(config, nm_url)
 

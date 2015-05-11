@@ -42,7 +42,7 @@ creators = {
     'costmap' : StaticFileCostMapBackend,
 }
 
-def create_instance(rid, config, global_config):
+def create_instance(rid, config, environ):
     if palto_config.has_missing_options(config, 'static_file', ['path']):
         logging.warning('Resource %s has no path option in *static_file* section', rid)
         return None
@@ -60,7 +60,7 @@ def create_instance(rid, config, global_config):
         logging.warning('Resource type %s is not supported yet', service)
         return None
 
-    return creator(config, global_config, rid, meta = meta, data = data)
+    return creator(config, environ['config'], rid, meta = meta, data = data)
 
 class TestObject():
     def __init__(self):
@@ -72,7 +72,8 @@ if __name__ == '__main__':
     global_config = palto_config.parse(global_file)
     config = palto_config.parse(config_file)
 
-    instance = create_instance('test_sf', config, global_config)
+    environ = { 'config': global_config }
+    instance = create_instance('test_sf', config, environ)
     request = TestObject()
     request.get_header = lambda x: 'application/alto-networkmap+json'
 

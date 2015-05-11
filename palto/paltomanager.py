@@ -7,6 +7,7 @@ import json
 import importlib
 import logging
 from . import errors, paltoserver
+import palto.frontend
 
 PROVIDER_FUNC = ['create_instance']
 
@@ -78,6 +79,7 @@ class PaltoManager(bottle.Bottle):
         self.hot_plugins = {'paltoserver': {}, 'paltomanager': {}}
         self.config = kargs.pop('config', configparser.ConfigParser())
         self.setup_routes(**kargs)
+        self.environ = { 'config': self.config, 'server': self.server, 'manager': self }
 
     def setup_routes(self, **kargs):
         load_conf_plugin = lambda callback: load_backend_config(callback)
@@ -90,13 +92,15 @@ class PaltoManager(bottle.Bottle):
         callbacks = {'add-backend' : add_backend, 'remove-backend' : remove_backend}
         for prefix, callback in callbacks.items():
             path = '/admin/{}/{}'.format(prefix, paltoserver.BACKEND_NAME_PATTERN)
-            r = bottle.Route(self, path, 'POST', callback, plugins=[load_conf_plugin])
+            _kargs = { 'plugins' : [load_conf_plugin], 'name' : prefix }
+            r = bottle.Route(self, path, 'POST', callback, **_kargs)
             self.add_route(r)
 
         callbacks = {'install' : install, 'uninstall' : uninstall }
         for prefix, callback in callbacks.items():
             path = '/admin/{}/<target>/<name>'.format(prefix)
-            r = bottle.Route(self, path, 'POST', callback, plugins=[load_conf_plugin])
+            _kargs = { 'plugins' : [load_conf_plugin], 'name' : prefix }
+            r = bottle.Route(self, path, 'POST', callback, **_kargs)
             self.add_route(r)
 
         auth_plugin = kargs.pop('auth', None)
@@ -122,7 +126,7 @@ class PaltoManager(bottle.Bottle):
             raise Exception('Plugin {} already exists'.format(plugin_name))
 
         provider = self.get_provider(config.get('basic', 'provider', fallback=None))
-        plugin = provider.create_instance(plugin_name, config, self.config)
+        plugin = provider.create_instance(plugin_name, config, self.environ)
 
         self.hot_plug(target, plugin_name, plugin)
         try:
@@ -156,12 +160,20 @@ class PaltoManager(bottle.Bottle):
         if self.server.get_backend(name) is not None:
             raise Exception('Backend %s already exists')
         provider = self.get_provider(config.get('basic', 'provider', fallback=None))
-        instance = provider.create_instance(name, config, self.config)
+        instance = provider.create_instance(name, config, self.environ)
 
         self.server.add_backend(name, instance)
 
     def remove_backend_route(self, name):
         self.server.remove_backend(name)
+
+    def run(self, host, port, **kwargs):
+        if not self.config.has_section('frontend'):
+            self.config.add_section('frontend')
+        self.config.set('frontend', 'host', host)
+        self.config.set('frontend', 'port', str(port))
+        self.config.set('frontend', 'alto-mountpoint', '/alto')
+        bottle.Bottle.run(self, host = host, port = port, **kwargs)
 
 if __name__ == '__main__':
     from .paltoserver import PaltoServer
@@ -171,4 +183,4 @@ if __name__ == '__main__':
     pmanager = PaltoManager(pserver, auth=auth_plugin, catchall=False)
 
     pmanager.mount('/alto/', pserver)
-    pmanager.run(host='localhost', port=3400, debug=True)
+    pmanager.run(host='localhost', port=3400, server='cherrypy', debug=True)

@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
+from .. import frontend
 from ..ird import BasicIRDHandler
-from .mimetypes import get_alto_mimetype
+from ..rfc7285.mimetypes import get_alto_mimetype
 import logging
 
 class ResourceID2URIHandler(BasicIRDHandler):
     """
     """
 
-    def __init__(self, base_uri):
-        self.base_uri = base_uri
+    def __init__(self, environ):
+        self.base_uri = frontend.get_base_url(environ)
 
     def on_generate(self, rid, resource, out, meta):
         if (out is None) or ('uri' in out) or ('resource-id' not in out):
             return
 
-        out['uri'] = self.base_uri + out['resource-id']
+        out['uri'] = self.base_uri() + out['resource-id']
         del out['resource-id']
 
 class Type2MediaTypeHandler(BasicIRDHandler):
@@ -55,7 +56,7 @@ class CostType2CostTypeNameHandler(BasicIRDHandler):
         return '{}-{}'.format(mode, metric)
 
     def matches(rid, resource):
-        if 'costmap' != resource.service:
+        if 'costmap' != resource.get_service():
             return False
         if not 'cost-types' in resource.get_capabilities():
             logging.warning('Resource %s declares costmap but supports no cost-types', rid)
@@ -180,4 +181,3 @@ if __name__ == '__main__':
 
     print(json.dumps(ird.meta))
     print(json.dumps(output))
-

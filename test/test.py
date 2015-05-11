@@ -27,5 +27,5 @@ class TestBackend(AbstractNetworkMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractNetworkMapBackend.post(self, request, response, actual_post)
 
-def create_instance(rid, config, global_config):
+def create_instance(rid, config, environ):
     return TestBackend(config)

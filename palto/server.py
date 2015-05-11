@@ -25,12 +25,13 @@ class PaltoServer():
             raise Exception("Missing fields in config file")
 
         # check the settings for the backend
-        providers = backend.get_providers(config)
+        environ = { 'config' : config }
+        providers = backend.get_providers(environ)
         providers.update(args.pop('providers', {}))
-        backends = backend.get_instances(config, providers)
+        backends = backend.get_instances(environ, providers)
         backends.update(args.pop('backends', {}))
 
-        backend.generate_ird(config, providers, backends)
+        backend.generate_ird(environ, providers, backends)
 
         self.config = config
         self.server_info = server_info

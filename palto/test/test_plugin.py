@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-def create_instance(name, config, global_config):
+def create_instance(name, config, environ):
 
     def test_plugin(callback):
 

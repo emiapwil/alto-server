@@ -6,6 +6,7 @@ import json
 from SubnetTree import SubnetTree
 import palto.frontend
 import palto.utils
+import palto.ird
 from palto.utils import correct_inet_format, cost_type_match
 from .utils import reverse_networkmap, encode_addr, decode_addr
 
@@ -124,7 +125,8 @@ class ECSLite(AbstractEndpointCostMapBackend):
         actual_post = lambda req, rep: self._post(req, rep)
         return AbstractEndpointCostMapBackend.post(self, request, response, actual_post)
 
-def create_instance(resource_id, config, global_config):
+
+def create_instance(resource_id, config, environ):
     networkmaps = config.get('ecslite', 'networkmaps').split(',')
     networkmaps = { x.strip() for x in networkmaps }
     costmap = config.get('ecslite', 'costmap')
@@ -134,7 +136,16 @@ def create_instance(resource_id, config, global_config):
         return None
 
     urls = {}
-    urls.update({ nm: palto.frontend.get_url(global_config, nm) for nm in networkmaps })
-    urls.update({ costmap: palto.frontend.get_url(global_config, costmap) })
+    urls.update({ nm: palto.frontend.get_url(environ, nm) for nm in networkmaps })
+    urls.update({ costmap: palto.frontend.get_url(environ, costmap) })
 
-    return ECSLite(config, networkmaps, costmap, urls)
+    ird = {
+        'resource-id': resource_id,
+        'input': 'endpointcostparams',
+        'output': 'endpointcost',
+        'uses': list(set.copy(networkmaps) | {costmap})
+    }
+
+    instance = ECSLite(config, networkmaps, costmap, urls)
+    instance.get_meta = lambda: ird
+    return instance

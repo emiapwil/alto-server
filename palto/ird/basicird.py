@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import copy
 
 class BasicIRD():
     """
@@ -55,17 +56,17 @@ class BasicIRD():
         self.register(rid, new_resource)
 
     def generate_dir(self):
-        dir = {}
-        dir['meta'] = self.meta
-        dir['resources'] = {}
+        ird = {}
+        ird['meta'] = self.meta
+        ird['resources'] = {}
         for rid, resource in self.resources.items():
-            output = self.generate(rid, resource)
+            output = self.generate(rid, resource, ird['meta'])
             if output is not None:
-                dir['resources'][rid] = output
+                ird['resources'][rid] = output
 
-        return dir
+        return ird
 
-    def generate(self, rid, resource = None):
+    def generate(self, rid, resource = None, meta = {}):
         if resource is None:
             resource = self.resources.get(rid, None)
         if resource is None:
@@ -73,7 +74,7 @@ class BasicIRD():
 
         output = resource.get_meta()
         for name in self.handle[BasicIRD.ON_GENERATE]:
-            task = lambda h: h.on_generate(rid, resource, output, self.meta)
+            task = lambda h: h.on_generate(rid, resource, output, meta)
             self.execute_handler(name, task)
         return output
 
@@ -101,12 +102,11 @@ class BasicIRD():
 
         del self.handlers[name]
 
-
 class BasicIRDResource():
     """
     """
 
-    BASIC_ATTR = ['rid', 'service', 'capabilities', 'uses', 'get_meta']
+    BASIC_ATTR = ['get_meta']
 
     def is_ird_resource(instance):
         for attr in BasicIRDResource.BASIC_ATTR:
@@ -117,23 +117,26 @@ class BasicIRDResource():
     def __init__(self, resource_id, service, **args):
         self.rid = resource_id
         self.service = service
+        self.accept = args.pop('accepts', None)
 
         self.capabilities = args.pop('capabilities', {})
         self.uses = args.pop('uses', set())
         self.args = args
 
     def get_meta(self):
-        output = self.args
+        output = copy.deepcopy(self.args)
         output['resource-id'] = self.rid
         output['output'] = self.service
+        if self.accept is not None:
+            output['input'] = self.accept
         if len(self.capabilities) > 0:
-            output['capabilities'] = self.capabilities
+            output['capabilities'] = self.get_capabilities()
         if len(self.uses) > 0:
-            output['uses'] = [ x for x in self.uses ]
+            output['uses'] = list(self.uses)
         return output
 
     def get_capabilities(self):
-        return self.capabilities
+        return copy.deepcopy(self.capabilities)
 
     def add_capabilities(self, capabilities = {}):
         self.capabilities.update(capabilities)
@@ -142,8 +145,13 @@ class BasicIRDResource():
         self.uses.update(new_uses)
 
     def get_uses(self):
-        return self.uses
+        return copy.deepcopy(self.uses)
 
+    def get_resource_id(self):
+        return self.rid
+
+    def get_service(self):
+        return self.service
 
 class BasicIRDHandler():
     """

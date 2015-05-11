@@ -23,7 +23,8 @@ def load_providers(provider_list):
 
     return providers
 
-def get_providers(config):
+def get_providers(environ):
+    config = environ['config']
     if palto_config.has_missing_options(config, 'backend', ['providers']):
         return None
 
@@ -32,7 +33,8 @@ def get_providers(config):
     providers = load_providers(provider_list)
     return providers
 
-def get_instances(global_config, providers):
+def get_instances(environ, providers):
+    global_config = environ['config']
     if palto_config.has_missing_options(global_config, 'backend', ['resources']):
         return None
 
@@ -64,7 +66,7 @@ def get_instances(global_config, providers):
             provider = providers[clazz]
 
             _create_instance = getattr(provider, 'create_instance')
-            instance = _create_instance(rid, config, global_config)
+            instance = _create_instance(rid, config, environ)
             if instance is not None:
                 instances[rid] = instance
         except Exception as e:
@@ -81,10 +83,10 @@ def is_ird_resource(instance):
         return False
     return True
 
-def get_irdbackend(provider, mountpoint, global_config):
+def get_irdbackend(provider, mountpoint, environ):
     _create_instance = getattr(provider, 'create_instance')
     config = palto_config.genereate_ird_config(mountpoint)
-    instance = _create_instance(mountpoint, config, global_config)
+    instance = _create_instance(mountpoint, config, environ)
     for attr in BasicIRD.BASIC_ATTR:
         if hasattr(instance, attr):
             continue
@@ -93,7 +95,8 @@ def get_irdbackend(provider, mountpoint, global_config):
         return None
     return instance
 
-def generate_ird(global_config, providers, instances):
+def generate_ird(environ, providers, instances):
+    global_config = environ['config']
     name = global_config.get('ird', 'provider', fallback='palto.simpleird')
     providers.update({} if name in providers else load_providers([name]))
     provider = providers.get(name)
@@ -101,7 +104,7 @@ def generate_ird(global_config, providers, instances):
         logging.error('Failed to load ird provider class %s', name)
         return
 
-    root = get_irdbackend(provider, '', global_config)
+    root = get_irdbackend(provider, '', environ)
     if root is None:
         return
     irds = { '' : root }
@@ -117,7 +120,7 @@ def generate_ird(global_config, providers, instances):
                 logging.warn('Mountpoint %s is designated already', mountpoint)
                 continue
             if not mountpoint in irds:
-                ird = get_irdbackend(provider, mountpoint, global_config)
+                ird = get_irdbackend(provider, mountpoint, environ)
                 if ird is not None:
                     root.register(mountpoint, ird)
                     irds[mountpoint] = ird

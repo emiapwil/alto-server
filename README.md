@@ -9,12 +9,13 @@ packages such as `configparser` often comes with a python distribution)
 - [`mimeparse`][mimeparse],
 - [`SubnetTree`][subnettree]
 
-Also since the packages in [backends](backends) are required using the example
-configuration file, the path must be added to the python path before running the
-server. It can be done by putting the following line in files such as `.bashrc`:
+Also since the packages in [backends](backends) and [plugins](plugins) are
+required using the example configuration file, the path must be added to the
+python path before running the server. It can be done by putting the following
+line in files such as `.bashrc`:
 
 ~~~bash
-export PYTHONPATH=$PATH_TO_ALTO_SERVER:$PATH_TO_ALTO_SERVER_BACKENDS:$PYTHONPATH
+export PYTHONPATH=$PATH_TO_ALTO_SERVER:$PATH_TO_BACKENDS:$PATH_TO_PLUGINS:$PYTHONPATH
 ~~~
 
 ## Architecture
@@ -34,20 +35,22 @@ where the resource wants to register itself.
 
 We will be using [bottle][bottle.py] to provide RESTful service.
 
-### Back-end
+### Backend
 
-There are currently two back-end types to be supported:
+There are currently two backend types to be supported:
 
-- Static file back-end: reading data from a static file
-- Open Daylight back-end: reading data from an ODL controller
+- Static file backend: reading data from a static file
+- Open Daylight backend: reading data from an ODL controller
 
-#### Implementing a customized back-end
+#### Implementing a customized backend
 
-To write a customized back-end, the module should contain the following method:
+To write a customized backend, the module should contain the following method:
 
 ~~~
-create_instance(resource-id, backend-config, global-config)
+create_instance(resource-id, backend-config, environment)
 ~~~
+
+The global configuration is now stored as `environment['config']`.
 
 ## Usage
 
@@ -114,38 +117,47 @@ curl -D - -X POST -u test:test \
       http://localhost:3400/admin/add-backend/test_sf_networkmap
 
 ## should get 200
-curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+curl -D - -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ## should get 200
 curl -D - -X POST -u test:test \
       http://localhost:3400/admin/remove-backend/test_sf_networkmap
 
 ## should get 200
-curl -D -X POST -u test:test \
+curl -D - -X POST -u test:test \
       --data-binary @examples/input/test_plugin.conf \
       http://localhost:3400/admin/install/paltoserver/test_plugin
 
 ## should get 200 and see some output in the server console
-curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+curl -D - -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ## should get 200
-curl -D -X POST -u test:test \
+curl -D - -X POST -u test:test \
       http://localhost:3400/admin/uninstall/paltoserver/test_plugin
 
+## Install AutoIRDPlugin
+## should get 200
+curl -D - -X POST -u test:test \
+      --data-binary @examples/input/test_autoird.conf \
+      http://localhost:3400/admin/install/paltomanager/autoird
+
+## should get 200 and see the generated root IRD
+curl -D - -X GET http://localhost:3400/alto/
+
 ## should get 200 and see no output in the server console
-curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
+curl -D - -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ## should get 404 again
 curl -D -X GET http://localhost:3400/alto/test_sf_networkmap
 
 ~~~
 
-# About Static File Back-end
+# About Static File Backend
 
 The support for network map is implemented. The example data file can be found
 in `examples/static_file/networkmap.json`.
 
-## Testing static file back-end
+## Testing static file backend
 
 Run the following command in one terminal to start the server:
 
@@ -172,9 +184,15 @@ A simple implementation for several services.
 
 See [ECSLite](backends/paltolite/README.md)
 
+# About AutoIRDPlugin
+
+A simple IRD generation plugin for palto.
+
+See [AutoIRDPlugin](plugins/autoird/README.md) for details.
+
 # Features in the Future
 
-- Improve the code structure for server/backend/frontend
-- Management interface for palto
+- Improve the code structure for server/backend/frontend (on-going)
+- Management interface for palto (on-going)
 - Dependency management and tracing (especially for ODL-backend)
 - Tag support
