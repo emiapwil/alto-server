@@ -47,9 +47,9 @@ class ODLEndpointPropertyMap( AbstractODLMap ):
 
     def to_odl_meta(self, rfc_meta):
         meta = {}
-        odl_meta['dependent-vtags'] = []
+        meta['dependent-vtags'] = []
         for d_vtag in rfc_meta['dependent-vtags']:
-            odl_meta['dependent-vtags'].append({
+            meta['dependent-vtags'].append({
                 'resource-id': d_vtag['resource-id'],
                 'tag': d_vtag['tag']
             })
@@ -59,9 +59,12 @@ class ODLEndpointPropertyMap( AbstractODLMap ):
         endp_props = []
         for endpoint in rfc_endp_props:
             endp_prop = {}
-            endp_prop[endpoint] = []
-            for prop in rfc_endp_props['properties']:
-                endp_prop[endpoint].append({
-                    prop['property-type']: prop['property']
+            endp_prop['endpoint'] = endpoint
+            endp_prop['properties'] = []
+            for prop in rfc_endp_props[endpoint]:
+                endp_prop['properties'].append({
+                    'property-type': prop,
+                    'property': rfc_endp_props[endpoint][prop]
                 })
+            endp_props.append(endp_prop)
         return endp_props

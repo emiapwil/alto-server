@@ -48,20 +48,27 @@ class ODLAdapter:
         odl_map = self.get_map_instance(map_type).load_odl_map(map_data)
         return self.to_json(odl_map.rfc_map())
 
-    def put_network_map(self, rfc_network_map):
-        self.put_map(self.NETWORK_MAP, rfc_network_map)
+    def put_network_map(self, text):
+        self.put_map(self.NETWORK_MAP, text)
 
-    def put_cost_map(self, rfc_cost_map):
-        self.put_map(self.COST_MAP, rfc_cost_map)
+    def put_cost_map(self, text):
+        self.put_map(self.COST_MAP, text)
 
-    def put_endpoint_property_map(self, rfc_endpoint_prop_map):
-        self.put_map(self.ENDPOINT_PROPERTY_MAP, rfc_endpoint_prop_map)
+    def put_endpoint_property_map(self, text):
+        self.put_map(self.ENDPOINT_PROPERTY_MAP, text)
 
-    def put_map(self, map_type, rfc_map):
+    def put_map(self, map_type, text):
+        rfc_map = json.loads(text)
         odl_map = self.get_map_instance(map_type).load_rfc_map(rfc_map)
+        resource_id = self.resource_id(map_type, odl_map)
+        url = self.map_url(map_type, resource_id)
         map_data = self.wrap_map(map_type, odl_map.odl_map())
-        url = self.map_url(map_type, odl_map.resource_id())
         self.http_put(url, map_data)
+
+    def resource_id(self, map_type, odl_map):
+        if map_type == SERVICES.ENDPOINT_PROP_MAP:
+            return None
+        return odl_map.resource_id()
 
     def get_map_instance(self, map_type):
         if map_type == self.NETWORK_MAP:
