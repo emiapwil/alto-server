@@ -21,10 +21,13 @@ class ODLAdapter:
         self.auth = HTTPBasicAuth(args['user'], args['password'])
 
     def get_ird(self):
-        text = http_get(self.ird_url())
+        text = self.http_get(self.ird_url())
         if text is not None:
-            odl_ird = ODLIRD.new().load_odl_ird(text)
+            odl_ird = ODLIRD().load_odl_ird(self.unwrap_ird(text))
             return self.to_json(odl_ird.rfc_ird())
+
+    def unwrap_ird(self, text):
+        return json.loads(text)['IRD']
 
     def get_endpoint_property_map(self):
         return self.get_map(self.ENDPOINT_PROPERTY_MAP, None)
@@ -36,9 +39,9 @@ class ODLAdapter:
         return self.get_map(self.COST_MAP, resource_id)
 
     def get_map(self, map_type, resource_id):
-        text = http_get(self.map_url(map_type, resource_id))
+        text = self.http_get(self.map_url(map_type, resource_id))
         if text is not None:
-            return self.extract_map(map_type, text)
+            return self.extract_rfc_map(map_type, text)
 
     def extract_rfc_map(self, map_type, text):
         map_data = self.unwrap_map(map_type, text)
@@ -58,7 +61,7 @@ class ODLAdapter:
         odl_map = self.get_map_instance(map_type).load_rfc_map(rfc_map)
         map_data = self.wrap_map(map_type, odl_map.odl_map())
         url = self.map_url(map_type, odl_map.resource_id())
-        http_put(url, map_data)
+        self.http_put(url, map_data)
 
     def get_map_instance(self, map_type):
         if map_type == self.NETWORK_MAP:
@@ -69,20 +72,20 @@ class ODLAdapter:
             return ODLEndpointPropertyMap()
 
     def wrap_map(self, map_type, map_data):
-        if map_type is self.ENDPOINT_PROPERTY_MAP:
+        if map_type == self.ENDPOINT_PROPERTY_MAP:
             wrapped_map = {map_type: map_data}
         else:
             wrapped_map = {map_type: [map_data]}
         return self.to_json(wrapped_map)
 
-    def unwrap_map(self, map_type, wrapped_map_data):
-        if map_type is self.ENDPOINT_PROPERTY_MAP:
-            return json.loads(wrapped_map_data)[map_type]
+    def unwrap_map(self, map_type, text):
+        if map_type == self.ENDPOINT_PROPERTY_MAP:
+            return json.loads(text)[map_type]
         else:
-            return json.loads(wrapped_map_data)[map_type][0]
+            return json.loads(text)[map_type][0]
 
     def map_url(self, map_type, resource_id):
-        if map_type is self.ENDPOINT_PROPERTY_MAP:
+        if map_type == self.ENDPOINT_PROPERTY_MAP:
             return self.resource_url + 'alto-service:' + self.ENDPOINT_PROPERTY_MAP
         else:
             return self.resource_url + 'alto-service:' + map_type + 's/alto-service:' + map_type + '/' + resource_id

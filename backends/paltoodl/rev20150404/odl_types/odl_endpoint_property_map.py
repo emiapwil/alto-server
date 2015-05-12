@@ -36,8 +36,8 @@ class ODLEndpointPropertyMap( AbstractODLMap ):
     def to_rfc_endp_props(self, odl_endp_props):
         endp_props = {}
         for endp_prop in odl_endp_props:
-            endpoint = odl_endp_props['endpoint']
-            properties = odl_endp_props['properties']
+            endpoint = endp_prop['endpoint']
+            properties = endp_prop['properties']
             endp_props[endpoint] = {}
             for prop in properties:
                 prop_name = prop['property-type']

@@ -6,7 +6,7 @@ class ODLIRD():
     def rfc_ird(self):
         return {
             'meta': self.to_rfc_meta(self.content['meta']),
-            'resources': self.to_rfc_resources(self.content[''])
+            'resources': self.to_rfc_resources(self.content['resources'])
         }
 
     def to_rfc_meta(self, odl_meta):
@@ -30,18 +30,18 @@ class ODLIRD():
         resources = {}
         for resource in odl_resources:
             resource_id = resource['resource-id']
-            resources[resource_id] = to_rfc_resource(resource)
+            resources[resource_id] = self.to_rfc_resource(resource)
         return resources
 
     def to_rfc_resource(self, odl_resource):
         rfc_resource = {
-            'uri': resource['uri'],
-            'media-type': resource['media-type']
+            'uri': odl_resource['uri'],
+            'media-type': odl_resource['media-type']
         }
-        if 'accepts' in resource:
-            rfc_resource['accepts'] = ','.join(resource['accepts'])
-        if 'capabilities' in resource:
-            rfc_resource['capabilities'] = resource['capabilities']
-        if 'uses' in resource:
-            rfc_resource['uses'] = resource['uses']
+        if 'accepts' in odl_resource:
+            rfc_resource['accepts'] = ','.join(odl_resource['accepts'])
+        if 'capabilities' in odl_resource:
+            rfc_resource['capabilities'] = odl_resource['capabilities']
+        if 'uses' in odl_resource:
+            rfc_resource['uses'] = odl_resource['uses']
         return rfc_resource
