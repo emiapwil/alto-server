@@ -34,8 +34,32 @@ class OpenDaylightNetworkMapBackend(AbstractNetworkMapBackend, BasicIRDResource)
     def post(self, request, response):
         return errors.not_implemented(response)
 
+class OpenDaylightCostMapBackend(AbstractCostMapBackend, BasicIRDResource):
+    """
+    """
+
+    def __init__(self, config, rid, **args):
+        AbstractNetworkMapBackend.__init__(self, config)
+        self.odl_args = { info : args.pop(info) for info in ODL_INFO }
+        BasicIRDResource.__init__(self, rid, 'costmap', **args)
+        self.connector = ODLAdapter(self.odl_args)
+
+    def _get(self):
+        result = self.connector.get_cost_map(self.odl_args['resource-id'])
+        if result is None:
+            raise RuntimeError('Error while reading from ODL')
+        return result
+
+    def get(self, request, response):
+        actual_get = lambda req, rep: self._get()
+        return AbstractNetworkMapBackend.get(self, request, response, actual_get)
+
+    def post(self, request, response):
+        return errors.not_implemented(response)
+
 creators = {
     'networkmap' : OpenDaylightNetworkMapBackend,
+    'costmap' : OpenDaylightCostMapBackend
 }
 
 def create_instance(resource_id, config, environ):
