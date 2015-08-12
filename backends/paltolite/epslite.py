@@ -91,7 +91,9 @@ def create_instance(name, config, environ):
         'input': 'endpointpropparams',
         'output': 'endpointprop',
         'uses': list(set.copy(networkmaps)),
-        'capabilities': [ pid_capability(x) for x in networkmaps ]
+        'capabilities': {
+            'prop-types': [ pid_capability(x) for x in networkmaps ]
+        }
     }
     instance = EPSLite(config, networkmaps, urls)
     instance.get_meta = lambda: ird

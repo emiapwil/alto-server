@@ -183,4 +183,4 @@ if __name__ == '__main__':
     pmanager = PaltoManager(pserver, auth=auth_plugin, catchall=False)
 
     pmanager.mount('/alto/', pserver)
-    pmanager.run(host='localhost', port=3400, server='cherrypy', debug=True)
+    pmanager.run(host='0.0.0.0', port=3400, server='cherrypy', debug=True)
