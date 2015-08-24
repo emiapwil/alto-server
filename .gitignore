@@ -1,4 +1,5 @@
 *.swp
+.zsh*
 **/*.dia~
 
 # Byte-compiled / optimized / DLL files
